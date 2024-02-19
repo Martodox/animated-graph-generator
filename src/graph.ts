@@ -1,8 +1,6 @@
 import { ChartConfiguration } from "chart.js";
 import { ChartJSNodeCanvas } from "chartjs-node-canvas";
 import { createCanvas, loadImage } from "canvas";
-import cliProgress from "cli-progress";
-import GIFEncoder from "gifencoder";
 import fs from "fs";
 import { getTimerFromSecondsElapsed } from "./helpers/time.js";
 import { ChartParams, GraphOptions } from "./types/graph.js";
@@ -128,10 +126,12 @@ const getCurrentSecond = (currentFrame: number, stepResolution: number) => {
   return Math.floor(currentFrame / stepResolution) * stepResolution;
 };
 
-export const renderGraph = async (options: GraphOptions) => {
+export const renderGraph = async (options: GraphOptions, cb: (msg: any) => void) => {
+
+
+
   const baseWidth = 1920;
   const basedHeight = 1080;
-
   const chartParams: ChartParams = {
     label: options.sessions,
     data: options.sessions,
@@ -147,40 +147,13 @@ export const renderGraph = async (options: GraphOptions) => {
     timerStoptSecond: options.timerStoptSecond,
   };
 
-  const framesToRender = options.frames
-    ? options.frames
-    : chartParams.data.length;
+  const framesToRender = options.endFrame - options.startFrame + 1;
 
-  const bar1 = new cliProgress.SingleBar(
-    {},
-    cliProgress.Presets.shades_classic
-  );
-  bar1.start(framesToRender, 0);
+
 
   const backgroundColour = "transparent";
 
-  let fileName;
 
-  let encoder;
-  if (options.devMode) {
-    fileName = "chart";
-    encoder = new GIFEncoder(chartParams.width, chartParams.height);
-
-    const delay = +(1000 / options.stepResolution).toFixed(2);
-
-    encoder
-      .createReadStream()
-      .pipe(fs.createWriteStream(`./out/${fileName}.gif`));
-    encoder.start();
-    encoder.setTransparent(0);
-    encoder.setRepeat(1);
-    encoder.setDelay(delay);
-    encoder.setQuality(255);
-  } else {
-    fileName = `chart - ${new Date().toISOString()}`;
-    fs.rmSync(`./out/${fileName}`, { recursive: true, force: true });
-    fs.mkdirSync(`./out/${fileName}`);
-  }
 
   const chartJSNodeCanvas = new ChartJSNodeCanvas({
     width: chartParams.width,
@@ -188,33 +161,24 @@ export const renderGraph = async (options: GraphOptions) => {
     backgroundColour,
   });
 
-  for (let currentFrame = 0; currentFrame < framesToRender; currentFrame++) {
-    const configuration = getConfigurationForIndex(currentFrame, chartParams);
+  for (let currentFrame = options.startFrame; currentFrame <= options.endFrame; currentFrame++) {
 
-    const buffer = chartJSNodeCanvas.renderToBufferSync(configuration);
+      const configuration = getConfigurationForIndex(currentFrame, chartParams);
+  
+      const buffer = chartJSNodeCanvas.renderToBufferSync(configuration);
+      cb(currentFrame);
+      fs.writeFile(
+        `./out/${options.fileName}/FrameLoop${(currentFrame + 1)
+          .toString()
+          .padStart(5, "0")}.png`,
+        buffer, () => {}
+      );      
 
-    fs.writeFileSync(
-      `./out/${fileName}/FrameLoop${(currentFrame + 1)
-        .toString()
-        .padStart(5, "0")}.png`,
-      buffer
-    );
+          // console.log(currentFrame);
+    
 
-    if (options.devMode) {
-      const canvas = createCanvas(chartParams.width, chartParams.height);
-
-      const chartCanvas = await loadImage(buffer);
-
-      let ctx = canvas.getContext("2d");
-
-      ctx.drawImage(chartCanvas, 0, 0, chartParams.width, chartParams.height);
-
-      encoder!.addFrame(canvas.getContext("2d") as any);
-    }
-
-    bar1.update(currentFrame);
+    // bar1.update(currentFrame);
   }
-  bar1.update(framesToRender);
-  bar1.stop();
-  options.devMode ? encoder!.finish() : null;
+  // bar1.update(framesToRender);
+  // bar1.stop();
 };

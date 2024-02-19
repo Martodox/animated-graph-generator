@@ -15,7 +15,10 @@ export interface GraphOptions extends Params {
     basedHeight: number,
     sizeMultiplier: number,
     devMode: boolean,
-    frames?: number
+    frames?: number,
+    startFrame: number,
+    endFrame: number,
+    fileName: string,
 }
 
 
