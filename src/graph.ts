@@ -7,8 +7,6 @@ import fs from "fs";
 import { getTimerFromSecondsElapsed } from "./helpers/time.js";
 import { ChartParams, GraphOptions } from "./types/graph.js";
 
-
-
 const getConfigurationForIndex = (
   currentFrame: number,
   chartParams: ChartParams
@@ -19,19 +17,30 @@ const getConfigurationForIndex = (
       labels: chartParams.label,
       datasets: [
         {
-          label: `Apnea: ${getTimer(currentFrame, chartParams.timerStartSecond, chartParams.timerStoptSecond)}`,
+          normalized: true,
+          label: `Apnea: ${getTimer(
+            currentFrame,
+            chartParams.stepResolution,
+            chartParams.timerStartSecond,
+            chartParams.timerStoptSecond
+          )}`,
           data: [],
           yAxisID: "yAxis2",
         },
         {
-          label: `HR: ${chartParams.data[currentFrame].toString().padStart(3, "0")}`,
+          label: `HR: ${chartParams.data[
+            getCurrentSecond(currentFrame, chartParams.stepResolution)
+          ]
+            .toString()
+            .padStart(3, "0")}`,
           data: chartParams.data,
+          normalized: true,
           borderColor: "rgb(225, 112, 0)",
           tension: 0.2,
           weight: 3,
           yAxisID: "yAxis",
           borderJoinStyle: "bevel",
-          borderWidth: chartParams.lineWidth
+          borderWidth: chartParams.lineWidth,
         },
       ],
     },
@@ -48,8 +57,8 @@ const getConfigurationForIndex = (
             boxWidth: 0,
             font: {
               size: chartParams.datasetLabelsize,
-            }
-          }
+            },
+          },
         },
       },
       elements: {
@@ -68,10 +77,10 @@ const getConfigurationForIndex = (
         xAxis: {
           display: false,
           grid: {
-            display: false
-          }
+            display: false,
+          },
         },
-        yAxis: {          
+        yAxis: {
           grid: {
             display: false,
             drawBorder: false,
@@ -80,46 +89,53 @@ const getConfigurationForIndex = (
             color: "white",
             maxTicksLimit: 5,
             font: {
-              size: chartParams.axisLabelSize
+              weight: "bold",
+              size: chartParams.axisLabelSize,
             },
           },
         },
-        yAxis2: {          
+        yAxis2: {
           display: false,
-          ticks: {display: false}          
+          ticks: { display: false },
         },
       },
     },
   };
 };
 
-const getTimer = (currentSecond: number, start: number = 0, stop: number = Infinity) => {
-
+const getTimer = (
+  currentFrame: number,
+  stepResolution: number,
+  start: number = 0,
+  stop: number = Infinity
+) => {
   let second = 0;
 
-  if (currentSecond >= start && currentSecond < stop) {    
+  const currentSecond = Math.floor(currentFrame / stepResolution);
+
+  if (currentSecond >= start && currentSecond < stop) {
     second = currentSecond - start + 1;
-    
-  } 
-  
+  }
+
   if (currentSecond >= stop) {
     second = stop - start + 1;
   }
-  
-  return getTimerFromSecondsElapsed(second);
 
-}
+  return getTimerFromSecondsElapsed(second);
+};
+
+const getCurrentSecond = (currentFrame: number, stepResolution: number) => {
+  return Math.floor(currentFrame / stepResolution) * stepResolution;
+};
 
 export const renderGraph = async (options: GraphOptions) => {
-  const label = options.sessions.map((val) => val.Time);
-  const data = options.sessions.map((val) => +val["HR (bpm)"]);
-
   const baseWidth = 1920;
   const basedHeight = 1080;
 
   const chartParams: ChartParams = {
-    label,
-    data,
+    label: options.sessions,
+    data: options.sessions,
+    stepResolution: options.stepResolution,
     width: baseWidth * options.sizeMultiplier,
     height: basedHeight * options.sizeMultiplier,
     datasetLabelsize: options.datasetLabelsize * options.sizeMultiplier,
@@ -128,29 +144,43 @@ export const renderGraph = async (options: GraphOptions) => {
     padding: options.padding * options.sizeMultiplier,
     lineWidth: options.lineWidth * options.sizeMultiplier,
     timerStartSecond: options.timerStartSecond,
-    timerStoptSecond: options.timerStoptSecond
-  }
+    timerStoptSecond: options.timerStoptSecond,
+  };
 
-  const bar1 = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
-  bar1.start(chartParams.data.length, 0);
-  
+  const framesToRender = options.frames
+    ? options.frames
+    : chartParams.data.length;
+
+  const bar1 = new cliProgress.SingleBar(
+    {},
+    cliProgress.Presets.shades_classic
+  );
+  bar1.start(framesToRender, 0);
+
   const backgroundColour = "transparent";
 
-  const encoder = new GIFEncoder(chartParams.width, chartParams.height);
+  let fileName;
 
-  const fileName = options.devMode ? "chart" : `chart - ${new Date().toISOString()}`;
-  const quality = options.devMode ? 255 : 10;
-  const delay = options.devMode ? 100 : 1000;
+  let encoder;
+  if (options.devMode) {
+    fileName = "chart";
+    encoder = new GIFEncoder(chartParams.width, chartParams.height);
 
+    const delay = +(1000 / options.stepResolution).toFixed(2);
 
-  encoder.createReadStream().pipe(fs.createWriteStream(`./out/${fileName}.gif`));
-  
-
-  encoder.start();
-  encoder.setTransparent(0);
-  encoder.setRepeat(0);
-  encoder.setDelay(delay);
-  encoder.setQuality(quality);
+    encoder
+      .createReadStream()
+      .pipe(fs.createWriteStream(`./out/${fileName}.gif`));
+    encoder.start();
+    encoder.setTransparent(0);
+    encoder.setRepeat(1);
+    encoder.setDelay(delay);
+    encoder.setQuality(255);
+  } else {
+    fileName = `chart - ${new Date().toISOString()}`;
+    fs.rmSync(`./out/${fileName}`, { recursive: true, force: true });
+    fs.mkdirSync(`./out/${fileName}`);
+  }
 
   const chartJSNodeCanvas = new ChartJSNodeCanvas({
     width: chartParams.width,
@@ -158,29 +188,33 @@ export const renderGraph = async (options: GraphOptions) => {
     backgroundColour,
   });
 
-
-
-  for (let currentFrame = 0; currentFrame < data.length; currentFrame++) {
-    const canvas = createCanvas(chartParams.width, chartParams.height);
-
+  for (let currentFrame = 0; currentFrame < framesToRender; currentFrame++) {
     const configuration = getConfigurationForIndex(currentFrame, chartParams);
 
     const buffer = chartJSNodeCanvas.renderToBufferSync(configuration);
 
-    if (currentFrame === 0) {
-      fs.writeFileSync("./out/chart.png", buffer);
+    fs.writeFileSync(
+      `./out/${fileName}/FrameLoop${(currentFrame + 1)
+        .toString()
+        .padStart(5, "0")}.png`,
+      buffer
+    );
+
+    if (options.devMode) {
+      const canvas = createCanvas(chartParams.width, chartParams.height);
+
+      const chartCanvas = await loadImage(buffer);
+
+      let ctx = canvas.getContext("2d");
+
+      ctx.drawImage(chartCanvas, 0, 0, chartParams.width, chartParams.height);
+
+      encoder!.addFrame(canvas.getContext("2d") as any);
     }
 
-    const chartCanvas = await loadImage(buffer);
-
-    let ctx = canvas.getContext("2d");
-
-    ctx.drawImage(chartCanvas, 0, 0, chartParams.width, chartParams.height);
-  
-    encoder.addFrame(canvas.getContext("2d") as any);
     bar1.update(currentFrame);
   }
-  bar1.update(data.length);
+  bar1.update(framesToRender);
   bar1.stop();
-  encoder.finish();
+  options.devMode ? encoder!.finish() : null;
 };
