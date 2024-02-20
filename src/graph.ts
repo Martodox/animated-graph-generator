@@ -126,10 +126,10 @@ const getCurrentSecond = (currentFrame: number, stepResolution: number) => {
   return Math.floor(currentFrame / stepResolution) * stepResolution;
 };
 
-export const renderGraph = async (options: GraphOptions, cb: (msg: any) => void) => {
-
-
-
+export const renderGraph = async (
+  options: GraphOptions,
+  cb: (msg: any) => void
+) => {
   const baseWidth = 1920;
   const basedHeight = 1080;
   const chartParams: ChartParams = {
@@ -149,11 +149,7 @@ export const renderGraph = async (options: GraphOptions, cb: (msg: any) => void)
 
   const framesToRender = options.endFrame - options.startFrame + 1;
 
-
-
   const backgroundColour = "transparent";
-
-
 
   const chartJSNodeCanvas = new ChartJSNodeCanvas({
     width: chartParams.width,
@@ -161,24 +157,21 @@ export const renderGraph = async (options: GraphOptions, cb: (msg: any) => void)
     backgroundColour,
   });
 
-  for (let currentFrame = options.startFrame; currentFrame <= options.endFrame; currentFrame++) {
+  for (
+    let currentFrame = options.startFrame;
+    currentFrame <= options.endFrame;
+    currentFrame++
+  ) {
+    const configuration = getConfigurationForIndex(currentFrame, chartParams);
 
-      const configuration = getConfigurationForIndex(currentFrame, chartParams);
-  
-      const buffer = chartJSNodeCanvas.renderToBufferSync(configuration);
-      cb(currentFrame);
-      fs.writeFile(
-        `./out/${options.fileName}/FrameLoop${(currentFrame + 1)
-          .toString()
-          .padStart(5, "0")}.png`,
-        buffer, () => {}
-      );      
-
-          // console.log(currentFrame);
-    
-
-    // bar1.update(currentFrame);
+    const buffer = chartJSNodeCanvas.renderToBufferSync(configuration);
+    cb(currentFrame);
+    fs.writeFile(
+      `./out/${options.fileName}/FrameLoop${(currentFrame + 1)
+        .toString()
+        .padStart(5, "0")}.png`,
+      buffer,
+      () => {}
+    );
   }
-  // bar1.update(framesToRender);
-  // bar1.stop();
 };

@@ -74,10 +74,9 @@ const prepareDataset = async () => {
 };
 
 const run = async () => {
-  // const numberOfCPUs = os.cpus().length;
-  const numberOfCPUs = 7;
+  const numberOfCPUs = os.cpus().length;
 
-  if (cluster.isPrimary) {    
+  if (cluster.isPrimary) {
     let fileName;
     if (devMode) {
       fileName = "chart";
@@ -86,7 +85,6 @@ const run = async () => {
       fs.rmSync(`./out/${fileName}`, { recursive: true, force: true });
       fs.mkdirSync(`./out/${fileName}`);
     }
-
 
     const { raw, translated } = await prepareDataset();
 
@@ -112,13 +110,12 @@ const run = async () => {
     jsonArray(raw);
 
     let res: number = 0;
-    let lastUpdate: number = -1;
 
-  const bar1 = new cliProgress.SingleBar(
-    {},
-    cliProgress.Presets.shades_classic
-  );
-  bar1.start(translated.length, 0);
+    const bar1 = new cliProgress.SingleBar(
+      {},
+      cliProgress.Presets.shades_classic
+    );
+    bar1.start(translated.length, 0);
 
     for (let i = 0; i < numberOfCPUs; i++) {
       let worker = cluster.fork({
@@ -127,37 +124,26 @@ const run = async () => {
         fileName,
         translated: JSON.stringify(translated),
         timerStartSecond,
-        timerStoptSecond
+        timerStoptSecond,
       });
+
       worker.on("message", () => {
-        res++;
+        bar1.update(++res);
+        if (res == translated.length) {
+          bar1.stop();
+          console.log((Date.now() - start) / 1000);
+          process.exit();
+        }
       });
     }
-
-    const getProgress = () => {    
-      if (res > 0 && res != lastUpdate) {
-         bar1.update(res)
-         lastUpdate = res;
-      }
-      if (res < translated.length) {
-        setTimeout(getProgress, 100)
-      } else {        
-        bar1.stop();
-        console.log(Date.now() - start)
-        process.exit(0);
-      }
-    };
-
-    getProgress();
   } else {
-    
     const seedData = (process.env as unknown) as {
-      chunk: number,
-      chunks: number,
-      fileName: string,
-      translated: string,
-      timerStartSecond: string,
-      timerStoptSecond: string
+      chunk: number;
+      chunks: number;
+      fileName: string;
+      translated: string;
+      timerStartSecond: string;
+      timerStoptSecond: string;
     };
 
     const chunk = +seedData.chunk;
@@ -175,45 +161,37 @@ const run = async () => {
 
     const send = (msg: any) => {
       process.send ? process.send(msg) : null;
-    }
+    };
 
-    if ((endFrame - perChunk) > (translated.length -1)) {
+    if (endFrame - perChunk > translated.length - 1) {
       return;
     }
 
-    if (endFrame > (translated.length -1)) {
-      endFrame = translated.length -1
+    if (endFrame > translated.length - 1) {
+      endFrame = translated.length - 1;
     }
 
-
-
-    renderGraph({
-      fileName: seedData.fileName,
-      devMode: true,
-      startFrame,
-      endFrame,
-      sessions: translated,
-      basedHeight: 1080,
-      baseWidth: 1920,
-      stepResolution,
-      sizeMultiplier: 0.3,
-      timerStartSecond: +seedData.timerStartSecond,
-      timerStoptSecond: +seedData.timerStoptSecond,
-      datasetLabelsize: 70,
-      axisLabelSize: 50,
-      timeKnobSize: 20,
-      padding: 40,
-      lineWidth: 10,
-    }, send);
-
-    // process.send
-    //   ? process.send({
-    //       chunk,
-    //       startFrame,
-    //       endFrame,
-    //       frames: endFrame - startFrame +1,
-    //     })
-    //   : null;
+    renderGraph(
+      {
+        fileName: seedData.fileName,
+        devMode: true,
+        startFrame,
+        endFrame,
+        sessions: translated,
+        basedHeight: 1080,
+        baseWidth: 1920,
+        stepResolution,
+        sizeMultiplier: 0.3,
+        timerStartSecond: +seedData.timerStartSecond,
+        timerStoptSecond: +seedData.timerStoptSecond,
+        datasetLabelsize: 70,
+        axisLabelSize: 50,
+        timeKnobSize: 20,
+        padding: 40,
+        lineWidth: 10,
+      },
+      send
+    );
   }
 };
 
