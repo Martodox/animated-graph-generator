@@ -10,31 +10,28 @@ import { getSecondsFromHourString } from "./helpers/time.js";
 import { renderGraph } from "./graph.js";
 import { jsonArray } from "./plainData.js";
 
+import config from "./config.js";
+
+
 const start = Date.now();
 
-const offsetInSeconds = 34 - 14;
-const stepResolution = 10;
-const startTime = "07:20:44";
-const endTime = "07:26:51";
-const devMode = false;
-const timerStart = "07:21:27";
-const timerEnd = "07:26:30";
-
-const sessionCSV = "./in/session.CSV";
-const sessionMetaCSV = "./in/sessionMeta.CSV";
-
 const prepareDataset = async () => {
-  const session: PolarSession[] = await csv().fromFile(sessionCSV);
-  const meta: PolarMeta[] = await csv().fromFile(sessionMetaCSV);
+  const input = fs.readFileSync(config.inputFile);
+  const individualLines = input.toString().split("\n");
+  const header = [individualLines.shift(), individualLines.shift()].join("\n")
+  
+  const meta: PolarMeta[] = await csv().fromString(header);
+  const session: PolarSession[] = await csv().fromString(individualLines.join("\n"))
+  
 
   const polarSessionStartFromMidnight = getSecondsFromHourString(
     meta[0]["Start time"]
   );
   const videoRecordingStart = getSecondsFromHourString(
-    startTime,
-    offsetInSeconds
+    config.startTime,
+    config.offsetInSeconds
   );
-  const videoRecordingStop = getSecondsFromHourString(endTime, offsetInSeconds);
+  const videoRecordingStop = getSecondsFromHourString(config.endTime, config.offsetInSeconds);
 
   const runTimeInSeconds = (videoRecordingStop - videoRecordingStart) / 1000;
 
@@ -52,14 +49,14 @@ const prepareDataset = async () => {
   }, []);
 
   let sessions = [];
-  if (stepResolution > 1) {
+  if (config.stepResolution > 1) {
     for (let i = 0; i < data.length - 1; i++) {
       const diff = +data[i + 1] - +data[i];
-      const increment = diff / stepResolution;
+      const increment = diff / config.stepResolution;
 
       sessions.push(+data[i]);
 
-      for (let n = 1; n < stepResolution; n++) {
+      for (let n = 1; n < config.stepResolution; n++) {
         sessions.push(+(+data[i] + increment * n).toFixed(2));
       }
     }
@@ -78,7 +75,7 @@ const run = async () => {
 
   if (cluster.isPrimary) {
     let fileName;
-    if (devMode) {
+    if (config.devMode) {
       fileName = "chart";
     } else {
       fileName = `chart - ${new Date().toISOString()}`;
@@ -89,16 +86,16 @@ const run = async () => {
     const { raw, translated } = await prepareDataset();
 
     const timerStartFromMidinght = getSecondsFromHourString(
-      timerStart,
-      offsetInSeconds
+      config.timerStart,
+      config.offsetInSeconds
     );
     const timerStopFromMidinght = getSecondsFromHourString(
-      timerEnd,
-      offsetInSeconds
+      config.timerEnd,
+      config.offsetInSeconds
     );
     const videoRecordingStart = getSecondsFromHourString(
-      startTime,
-      offsetInSeconds
+      config.startTime,
+      config.offsetInSeconds
     );
 
     const timerStartSecond =
@@ -180,7 +177,7 @@ const run = async () => {
         sessions: translated,
         basedHeight: 1080,
         baseWidth: 1920,
-        stepResolution,
+        stepResolution: config.stepResolution,
         sizeMultiplier: 0.3,
         timerStartSecond: +seedData.timerStartSecond,
         timerStoptSecond: +seedData.timerStoptSecond,
