@@ -1,6 +1,5 @@
 import { ChartConfiguration } from "chart.js";
 import { ChartJSNodeCanvas } from "chartjs-node-canvas";
-import { createCanvas, loadImage } from "canvas";
 import fs from "fs";
 import { getTimerFromSecondsElapsed } from "./helpers/time.js";
 import { ChartParams, GraphOptions } from "./types/graph.js";
@@ -130,14 +129,13 @@ export const renderGraph = async (
   options: GraphOptions,
   cb: (msg: any) => void
 ) => {
-  const baseWidth = 1920;
-  const basedHeight = 1080;
+  
   const chartParams: ChartParams = {
     label: options.sessions,
     data: options.sessions,
     stepResolution: options.stepResolution,
-    width: baseWidth * options.sizeMultiplier,
-    height: basedHeight * options.sizeMultiplier,
+    width: options.baseWidth * options.sizeMultiplier,
+    height: options.basedHeight * options.sizeMultiplier,
     datasetLabelsize: options.datasetLabelsize * options.sizeMultiplier,
     axisLabelSize: options.axisLabelSize * options.sizeMultiplier,
     timeKnobSize: options.timeKnobSize * options.sizeMultiplier,
@@ -147,14 +145,10 @@ export const renderGraph = async (
     timerStoptSecond: options.timerStoptSecond,
   };
 
-  const framesToRender = options.endFrame - options.startFrame + 1;
-
-  const backgroundColour = "transparent";
-
   const chartJSNodeCanvas = new ChartJSNodeCanvas({
     width: chartParams.width,
     height: chartParams.height,
-    backgroundColour,
+    backgroundColour: "transparent",
   });
 
   for (

@@ -8,5 +8,19 @@ export interface Config {
     "endTime": TimeString,
     "devMode": boolean
     "timerStart": TimeString
-    "timerEnd": TimeString
+    "timerEnd": TimeString,
+    basedHeight: number,
+    baseWidth: number,
+    sizeMultiplier: number,
 }
+
+export interface SeedData {
+    chunk: number;
+    chunks: number;
+    fileName: string;
+    translated: string;
+    timerStartSecond: number;
+    timerStoptSecond: number;
+    stepResolution: number;
+    devMode: boolean;
+  }
