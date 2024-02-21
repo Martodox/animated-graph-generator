@@ -9,73 +9,22 @@ import cliProgress from "cli-progress";
 import { getSecondsFromHourString } from "./helpers/time.js";
 import { renderGraph } from "./graph.js";
 import { jsonArray } from "./plainData.js";
+import { prepareDataset } from "./helpers/dataset.js";
+const numberOfCPUs = os.cpus().length;
 
-import config from "./config.js";
 
 
 const start = Date.now();
 
-const prepareDataset = async () => {
-  const input = fs.readFileSync(config.inputFile);
-  const individualLines = input.toString().split("\n");
-  const header = [individualLines.shift(), individualLines.shift()].join("\n")
-  
-  const meta: PolarMeta[] = await csv().fromString(header);
-  const session: PolarSession[] = await csv().fromString(individualLines.join("\n"))
-  
 
-  const polarSessionStartFromMidnight = getSecondsFromHourString(
-    meta[0]["Start time"]
-  );
-  const videoRecordingStart = getSecondsFromHourString(
-    config.startTime,
-    config.offsetInSeconds
-  );
-  const videoRecordingStop = getSecondsFromHourString(config.endTime, config.offsetInSeconds);
-
-  const runTimeInSeconds = (videoRecordingStop - videoRecordingStart) / 1000;
-
-  const secondsToRemove =
-    (videoRecordingStart - polarSessionStartFromMidnight) / 1000;
-
-  const croppedSessions = session.slice(
-    secondsToRemove,
-    -(session.length - runTimeInSeconds - secondsToRemove)
-  );
-
-  const data = croppedSessions.reduce<number[]>((acc, val, index) => {
-    const current = val["HR (bpm)"] === "0" ? acc[index - 1] : val["HR (bpm)"];
-    return [...acc, +current];
-  }, []);
-
-  let sessions = [];
-  if (config.stepResolution > 1) {
-    for (let i = 0; i < data.length - 1; i++) {
-      const diff = +data[i + 1] - +data[i];
-      const increment = diff / config.stepResolution;
-
-      sessions.push(+data[i]);
-
-      for (let n = 1; n < config.stepResolution; n++) {
-        sessions.push(+(+data[i] + increment * n).toFixed(2));
-      }
-    }
-  } else {
-    sessions = data;
-  }
-
-  return {
-    raw: data,
-    translated: sessions,
-  };
-};
 
 const run = async () => {
-  const numberOfCPUs = os.cpus().length;
+  
+  const { raw, translated, devMode, stepResolution, timerStart, offsetInSeconds, timerEnd, startTime } = await prepareDataset();
 
   if (cluster.isPrimary) {
     let fileName;
-    if (config.devMode) {
+    if (devMode) {
       fileName = "chart";
     } else {
       fileName = `chart - ${new Date().toISOString()}`;
@@ -83,19 +32,18 @@ const run = async () => {
       fs.mkdirSync(`./out/${fileName}`);
     }
 
-    const { raw, translated } = await prepareDataset();
 
     const timerStartFromMidinght = getSecondsFromHourString(
-      config.timerStart,
-      config.offsetInSeconds
+      timerStart,
+      offsetInSeconds
     );
     const timerStopFromMidinght = getSecondsFromHourString(
-      config.timerEnd,
-      config.offsetInSeconds
+      timerEnd,
+      offsetInSeconds
     );
     const videoRecordingStart = getSecondsFromHourString(
-      config.startTime,
-      config.offsetInSeconds
+      startTime,
+      offsetInSeconds
     );
 
     const timerStartSecond =
@@ -177,7 +125,7 @@ const run = async () => {
         sessions: translated,
         basedHeight: 1080,
         baseWidth: 1920,
-        stepResolution: config.stepResolution,
+        stepResolution: stepResolution,
         sizeMultiplier: 0.3,
         timerStartSecond: +seedData.timerStartSecond,
         timerStoptSecond: +seedData.timerStoptSecond,
