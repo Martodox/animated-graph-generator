@@ -35,6 +35,7 @@ const getConfigurationForIndex = (
           borderColor: "rgb(225, 112, 0)",
           tension: 0.2,
           weight: 3,
+          clip: 100,
           yAxisID: "yAxis",
           borderJoinStyle: "bevel",
           borderWidth: chartParams.lineWidth,
@@ -63,7 +64,7 @@ const getConfigurationForIndex = (
           pointStyle: "circle",
           backgroundColor: "white",
           borderColor: "white",
-          borderWidth: 0,
+          borderWidth: 0,          
           radius: (context) => {
             let index = context.dataIndex;
             return index === currentFrame ? chartParams.timeKnobSize : 0;
@@ -157,7 +158,7 @@ export const renderGraph = async (
     currentFrame++
   ) {
     const configuration = getConfigurationForIndex(currentFrame, chartParams);
-
+    
     const buffer = chartJSNodeCanvas.renderToBufferSync(configuration);
     cb(currentFrame);
     fs.writeFile(

@@ -4,8 +4,9 @@ export interface Config {
     "inputFile": string,
     "offsetInSeconds": number,
     "stepResolution": number,
+    textOnly: boolean,
     "startTime": TimeString
-    "endTime": TimeString,
+    "runTimeInSeconds": number,
     "devMode": boolean
     "timerStart": TimeString
     "timerEnd": TimeString,

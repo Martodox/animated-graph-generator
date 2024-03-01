@@ -6,6 +6,8 @@ import fs from "fs";
 import os from "os";
 import cliProgress from "cli-progress";
 import { SeedData } from "../types/config.js";
+import config from "../config.js";
+
 
 const numberOfCPUs = os.cpus().length;
 
@@ -17,15 +19,21 @@ export const primaryThread = async () => {
     
     const { raw, translated, devMode, stepResolution, timerStart, offsetInSeconds, timerEnd, startTime } = await prepareDataset();
 
-
     let fileName;
     if (devMode) {
       fileName = "chart";
     } else {
       fileName = `chart - ${new Date().toISOString()}`;
-      fs.rmSync(`./out/${fileName}`, { recursive: true, force: true });
-      fs.mkdirSync(`./out/${fileName}`);
     }
+
+
+    try {
+      fs.mkdirSync(`./out/${fileName}`);
+    } catch {
+
+    }
+
+    
 
 
     const timerStartFromMidinght = getSecondsFromHourString(
@@ -49,6 +57,11 @@ export const primaryThread = async () => {
 
     jsonArray(raw);
 
+    if (config.textOnly) {
+      console.log("Only data.txt rendered. Turn off textOnly to render the full chart!")
+      return;
+    }
+
     let res: number = 0;
 
     const bar1 = new cliProgress.SingleBar(
@@ -56,6 +69,8 @@ export const primaryThread = async () => {
       cliProgress.Presets.shades_classic
     );
     bar1.start(translated.length, 0);
+
+
 
     for (let i = 0; i < numberOfCPUs; i++) {
       let worker = cluster.fork({

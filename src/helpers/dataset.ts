@@ -13,7 +13,7 @@ export const prepareDataset = async () => {
     const meta: PolarMeta[] = await csv().fromString(header);
     const session: PolarSession[] = await csv().fromString(individualLines.join("\n"))
     
-  
+
     const polarSessionStartFromMidnight = getSecondsFromHourString(
       meta[0]["Start time"]
     );
@@ -21,13 +21,14 @@ export const prepareDataset = async () => {
       config.startTime,
       config.offsetInSeconds
     );
-    const videoRecordingStop = getSecondsFromHourString(config.endTime, config.offsetInSeconds);
+
+
+    const videoRecordingStop = videoRecordingStart + Math.floor(config.runTimeInSeconds * 1000);
   
     const runTimeInSeconds = (videoRecordingStop - videoRecordingStart) / 1000;
   
     const secondsToRemove =
       (videoRecordingStart - polarSessionStartFromMidnight) / 1000;
-  
     const croppedSessions = session.slice(
       secondsToRemove,
       -(session.length - runTimeInSeconds - secondsToRemove)
