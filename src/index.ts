@@ -1,43 +1,21 @@
 import csv from "csvtojson";
-import { PolarMeta, PolarSession } from "./types/Polar";
-import srtParser2, { Line } from "srt-parser-2";
-import fs from "fs";
+import { PolarMeta, PolarSession } from "./types/Polar.js";
 
-const offset = 0;
-const startTime = "08:28:49"
+import { getSecondsFromHourString } from "./helpers/time.js";
+import { renderGraph } from "./graph.js";
+
+const offsetInSeconds = -13;
+
+const startTime = "08:44:17";
+// const endTime = "08:47:22";
+const endTime = "08:44:27";
+
+const timerStart = "08:44:45";
+const timerEnd = "08:47:00";
+
 const sessionCSV = "./in/session.CSV";
 const sessionMetaCSV = "./in/sessionMeta.CSV";
 
-const parsePolarTime = (timeString: string): number => {
-    const split = timeString.split(":")
-    return new Date(`2000-01-01T${split[0]}:${split[1]}:${split[2]}.000Z`).getTime();
-}
-
-const polarTimeToSrtTimeChunks = (polarTime: number, offset: number = 0) => {
-        const time = new Date(polarTime + offset);
-        const isoString = time.toISOString().split("T")[1].replace("Z", "");
-        const hours = isoString.split(":")[0];
-        const minutes = isoString.split(":")[1];
-        const seconds = isoString.split(":")[2].split(".")[0]
-        const miliseconds = isoString.split(":")[2].split(".")[1]
-
-        return {
-            hours,
-            minutes,
-            seconds,
-            miliseconds
-        }
-};
-
-const srtTimeChunksToTimeString = (chunks: any) => {
-    return `${chunks.hours}:${chunks.minutes}:${chunks.seconds},${chunks.miliseconds}`
-}
-
-const getSecondsFromHourString = (input: string) => {
-    const date = new Date(`2000-01-01:${input}`);
-    return date.getTime();
-    
-} 
 
 (async () => {
 
@@ -45,35 +23,37 @@ const getSecondsFromHourString = (input: string) => {
     const meta: PolarMeta[] = await csv().fromFile(sessionMetaCSV);
 
 
-    const sessionStartFromMidnight = getSecondsFromHourString(meta[0]["Start time"]);
-    const videoRecordingStart = getSecondsFromHourString(startTime)
+    const polarSessionStartFromMidnight = getSecondsFromHourString(meta[0]["Start time"]);
+    const videoRecordingStart = getSecondsFromHourString(startTime, offsetInSeconds) 
+    const videoRecordingStop = getSecondsFromHourString(endTime, offsetInSeconds);
 
-    const secondsToRemove = (videoRecordingStart - sessionStartFromMidnight)/ 1000 - 1;
+    const runTimeInSeconds = (videoRecordingStop - videoRecordingStart) / 1000;
 
-    const parser = new srtParser2();
+    const timerStartFromMidinght = getSecondsFromHourString(timerStart, offsetInSeconds);
+    const timerStopFromMidinght = getSecondsFromHourString(timerEnd, offsetInSeconds);
 
-    const lines: any[] = session.slice(secondsToRemove).map((val, index) => {
+    const timerStartSecond = (timerStartFromMidinght - videoRecordingStart) / 1000;
+    const timerRunInSeconds = (timerStopFromMidinght - timerStartFromMidinght) / 1000;
+    const timerStoptSecond = timerStartSecond + timerRunInSeconds;
 
-        const polarTime = parsePolarTime(val.Time);
-        
-        
-
-        const milisecondsStart = polarTimeToSrtTimeChunks(polarTime, offset - secondsToRemove * 1000);
-        const milisecondsEnd = polarTimeToSrtTimeChunks(polarTime, offset + 999 - secondsToRemove * 1000);
-
-        return {
-            id: `${index}`,
-            startTime: srtTimeChunksToTimeString(milisecondsStart),
-            endTime: srtTimeChunksToTimeString(milisecondsEnd),
-            text: `HR: ${val["HR (bpm)"].padStart(3, "0")}`
-        }
-    })
-
-    const srt = parser.toSrt(lines);
-
-
-    fs.writeFileSync(`./out/session+${Date.now()}.srt`, srt, {});
-
+    const secondsToRemove = (videoRecordingStart - polarSessionStartFromMidnight)/ 1000;
+    
+    const croppedSessions = session.slice(secondsToRemove, -(session.length - runTimeInSeconds - secondsToRemove));
+    
+    renderGraph({
+        devMode: true,
+        sessions: croppedSessions,
+        basedHeight: 1080,
+        baseWidth: 1920,
+        sizeMultiplier: 1,
+        timerStartSecond,
+        timerStoptSecond,
+        datasetLabelsize: 70,
+        axisLabelSize: 50,
+        timeKnobSize: 20,
+        padding: 40,
+        lineWidth: 10
+    });
 
 })()
 

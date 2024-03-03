@@ -1,15 +1,14 @@
 {
   "compilerOptions": {
     "outDir": "./dist",
-    "baseUrl": ".",
-    "jsx": "react",
-    "module": "ESNext",
+    "baseUrl": "@polarParser",
+    "module": "Node16",
     "target": "ES6",
     "lib": ["dom", "ES2019"],
     "noEmit": false,
     "declaration": true,
     "preserveSymlinks": false,
-    "moduleResolution": "node",
+    "moduleResolution": "Node16",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
