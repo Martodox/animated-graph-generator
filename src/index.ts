@@ -7,8 +7,8 @@ import { renderGraph } from "./graph.js";
 const offsetInSeconds = -13;
 
 const startTime = "08:44:17";
-// const endTime = "08:47:22";
-const endTime = "08:44:27";
+const endTime = "08:47:22";
+// const endTime = "08:44:27";
 
 const timerStart = "08:44:45";
 const timerEnd = "08:47:00";
@@ -41,7 +41,7 @@ const sessionMetaCSV = "./in/sessionMeta.CSV";
     const croppedSessions = session.slice(secondsToRemove, -(session.length - runTimeInSeconds - secondsToRemove));
     
     renderGraph({
-        devMode: true,
+        devMode: false,
         sessions: croppedSessions,
         basedHeight: 1080,
         baseWidth: 1920,

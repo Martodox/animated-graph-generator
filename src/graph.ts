@@ -36,9 +36,8 @@ const getConfigurationForIndex = (
       ],
     },
     options: {
-      
       layout: {
-        padding: chartParams.padding
+        padding: chartParams.padding,
       },
       plugins: {
         legend: {
@@ -74,7 +73,8 @@ const getConfigurationForIndex = (
         },
         yAxis: {          
           grid: {
-            display: false
+            display: false,
+            drawBorder: false,
           },
           ticks: {
             color: "white",
@@ -147,10 +147,10 @@ export const renderGraph = async (options: GraphOptions) => {
   
 
   encoder.start();
-  encoder.setTransparent("#000000");
+  encoder.setTransparent(0);
   encoder.setRepeat(0);
   encoder.setDelay(delay);
-  encoder.setQuality(10);
+  encoder.setQuality(quality);
 
   const chartJSNodeCanvas = new ChartJSNodeCanvas({
     width: chartParams.width,
@@ -170,7 +170,6 @@ export const renderGraph = async (options: GraphOptions) => {
     if (currentFrame === 0) {
       fs.writeFileSync("./out/chart.png", buffer);
     }
-
 
     const chartCanvas = await loadImage(buffer);
 
