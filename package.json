@@ -6,7 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rm -rf dist && tsc --build",
-    "start": "npm run build && node ./dist/index.js"
+    "start": "npm run build && node ./dist/index.js",
+    "watch": "npx nodemon  --watch \"src/**\" --ext \"ts,json\" --exec 'npm run start'"
+
   },
   "author": "",
   "license": "ISC",
@@ -14,5 +16,5 @@
     "srt-parser-2": "^1.2.3",
     "tsc": "^2.0.4",
     "typescript": "^5.3.3"
-  }
+}
 }
