@@ -1,5 +1,5 @@
 {
-  "name": "polar-to-srt-converter",
+  "name": "polar-animated-graph-generator",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -19,8 +19,6 @@
     "chartjs-to-image": "^1.2.2",
     "cli-progress": "^3.12.0",
     "csvtojson": "^2.0.10",
-    "gifencoder": "^2.0.1",
-    "srt-parser-2": "^1.2.3",
     "tsc": "^2.0.4",
     "typescript": "^5.3.3"
   },
