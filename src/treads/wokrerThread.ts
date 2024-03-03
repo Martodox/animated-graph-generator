@@ -10,7 +10,10 @@ export const workerThread = () => {
   const translated = JSON.parse(seedData.translated);
 
   const send = (msg: any) => {
-    process.send ? process.send(msg) : null;
+    process.send ? process.send({
+      workerID: chunk,
+      msg,
+    }) : null;
   };
 
   let perChunk = Math.ceil(translated.length / chunks);

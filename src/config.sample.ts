@@ -6,7 +6,7 @@ const config: Config = {
     stepResolution: 30,
     textOnly: true,
     startTime: "08:52:13",
-    runTimeInSeconds: 190,
+    endTime: "08:47:56",    
     devMode: false,
     timerStart: "08:52:34",
     timerEnd: "08:54:34",

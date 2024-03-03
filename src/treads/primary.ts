@@ -26,16 +26,6 @@ export const primaryThread = async () => {
       fileName = `chart - ${new Date().toISOString()}`;
     }
 
-
-    try {
-      fs.mkdirSync(`./out/${fileName}`);
-    } catch {
-
-    }
-
-    
-
-
     const timerStartFromMidinght = getSecondsFromHourString(
       timerStart,
       offsetInSeconds
@@ -55,11 +45,17 @@ export const primaryThread = async () => {
       (timerStopFromMidinght - timerStartFromMidinght) / 1000;
     const timerStoptSecond = timerStartSecond + timerRunInSeconds;
 
-    jsonArray(raw);
+    jsonArray(raw, fileName);
 
     if (config.textOnly) {
       console.log("Only data.txt rendered. Turn off textOnly to render the full chart!")
       return;
+    }
+
+    try {
+      fs.mkdirSync(`./out/${fileName}`);
+    } catch {
+
     }
 
     let res: number = 0;
@@ -85,7 +81,8 @@ export const primaryThread = async () => {
       } as SeedData);
 
       worker.on("message", () => {
-        bar1.update(++res);
+        bar1.increment();
+        res++;
         if (res == translated.length) {
           bar1.stop();
           resolve();

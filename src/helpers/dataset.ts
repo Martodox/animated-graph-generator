@@ -22,8 +22,7 @@ export const prepareDataset = async () => {
       config.offsetInSeconds
     );
 
-
-    const videoRecordingStop = videoRecordingStart + Math.floor(config.runTimeInSeconds * 1000);
+    const videoRecordingStop = getSecondsFromHourString(config.endTime, config.offsetInSeconds);
   
     const runTimeInSeconds = (videoRecordingStop - videoRecordingStart) / 1000;
   

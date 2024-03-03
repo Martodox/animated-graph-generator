@@ -6,7 +6,7 @@ export interface Config {
     "stepResolution": number,
     textOnly: boolean,
     "startTime": TimeString
-    "runTimeInSeconds": number,
+    "endTime": TimeString,
     "devMode": boolean
     "timerStart": TimeString
     "timerEnd": TimeString,
