@@ -1,15 +1,21 @@
 export type TimeString = string;
 
+export interface DataSection {
+    "name": string,
+    "startTime": TimeString
+    "endTime": TimeString,
+    "timerStart": TimeString
+    "timerEnd": TimeString,
+}
+
 export interface Config {
     "inputFile": string,
     "offsetInSeconds": number,
     "stepResolution": number,
     textOnly: boolean,
-    "startTime": TimeString
-    "endTime": TimeString,
+    sections: DataSection[],
     "devMode": boolean
-    "timerStart": TimeString
-    "timerEnd": TimeString,
+    
     basedHeight: number,
     baseWidth: number,
     sizeMultiplier: number,
