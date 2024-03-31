@@ -27,7 +27,7 @@ export const processDataSection = async (section: DataSection): Promise<void> =>
     if (devMode) {
       fileName = "chart";
     } else {
-      fileName = `chart - ${section.name} - ${new Date().toISOString()}`;
+      fileName = `chart - ${section.name}`;
     }
   
     const timerStartFromMidinght = getSecondsFromHourString(

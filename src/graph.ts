@@ -158,11 +158,12 @@ export const renderGraph = async (
     currentFrame++
   ) {
     const configuration = getConfigurationForIndex(currentFrame, chartParams);
-    
+
+
     const buffer = chartJSNodeCanvas.renderToBufferSync(configuration);
     cb(currentFrame);
     fs.writeFile(
-      `./out/${options.fileName}/FrameLoop${(currentFrame + 1)
+      `./out/${options.fileName}/${options.fileName}Loop${(currentFrame + 1)
         .toString()
         .padStart(5, "0")}.png`,
       buffer,
