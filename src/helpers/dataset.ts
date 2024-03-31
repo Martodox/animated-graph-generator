@@ -5,6 +5,23 @@ import { PolarMeta, PolarSession } from "../types/Polar.js";
 import { getSecondsFromHourString } from "./time.js";
 import { DataSection } from "../types/config.js";
 
+const findPrevNonNull = (data: number[], index: number) => {
+  
+  
+  if (!!data[index]) return data[index];
+  let iteratorIndex = index;
+  let val = data[iteratorIndex];
+
+  while (val === 0 && index > 0) {
+    val = data[--index]    
+  }
+
+  while (val === 0) {
+    val = data[++index]    
+  }
+  return val;
+  }
+
 export const prepareDataset = async ({
   startTime,
   endTime,
@@ -16,9 +33,14 @@ export const prepareDataset = async ({
   const header = [individualLines.shift(), individualLines.shift()].join("\n");
 
   const meta: PolarMeta[] = await csv().fromString(header);
-  const session: PolarSession[] = await csv().fromString(
+  
+  let session: number[] = (await csv().fromString(
     individualLines.join("\n")
-  );
+  )).map((val) => +val["HR (bpm)"]);
+
+  session = session.map((_, index) => findPrevNonNull(session, index))
+  
+
 
   const polarSessionStartFromMidnight = getSecondsFromHourString(
     meta[0]["Start time"]
@@ -42,30 +64,25 @@ export const prepareDataset = async ({
     -(session.length - runTimeInSeconds - secondsToRemove)
   );
 
-  const data = croppedSessions.reduce<number[]>((acc, val, index) => {
-    const current = val["HR (bpm)"] === "0" ? acc[index - 1] : val["HR (bpm)"];
-    return [...acc, +current];
-  }, []);
-
-  let sessions = [];
+  let translated = [];
   if (config.stepResolution > 1) {
-    for (let i = 0; i < data.length - 1; i++) {
-      const diff = +data[i + 1] - +data[i];
+    for (let i = 0; i < croppedSessions.length - 1; i++) {
+      const diff = +croppedSessions[i + 1] - +croppedSessions[i];
       const increment = diff / config.stepResolution;
 
-      sessions.push(+data[i]);
+      translated.push(+croppedSessions[i]);
 
       for (let n = 1; n < config.stepResolution; n++) {
-        sessions.push(+(+data[i] + increment * n).toFixed(2));
+        translated.push(+(+croppedSessions[i] + increment * n).toFixed(2));
       }
     }
   } else {
-    sessions = data;
+    translated = croppedSessions;
   }
 
   return {
-    raw: data,
-    translated: sessions,
+    raw: croppedSessions,
+    translated,
     startTime: startTime,
     timerStart: timerStart,
     timerEnd: timerEnd,
