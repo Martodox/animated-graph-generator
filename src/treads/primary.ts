@@ -7,10 +7,31 @@ import os from "os";
 import cliProgress from "cli-progress";
 import { DataSection, SeedData } from "../types/config.js";
 import config from "../config.js";
+import { RenderCallback } from "../types/graph.js";
+import {
+  mean,
+  median,
+} from '@basementuniverse/stats';
 
+import percentile from 'percentile';
 const numberOfCPUs = os.cpus().length;
+const renderTimes: number[] = [];
 
-export const processDataSection = async (section: DataSection): Promise<void> => {
+type statKeys = "mean (ms)" | "median (ms)" | "p95 (ms)" | "p90 (ms)";
+
+const computeStats = (times: number[]): {[key in statKeys]: number|number[]} => {
+
+  return {
+    "mean (ms)": Math.floor(mean(times)),
+    "median (ms)":  Math.floor(median(times)),
+    "p95 (ms)": percentile(95, times),
+    "p90 (ms)": percentile(90, times),
+  }
+
+  
+}
+
+export const processDataSection = async (section: DataSection): Promise<object> => {
   return new Promise(async (resolve) => {
     const {
       raw,
@@ -87,12 +108,17 @@ export const processDataSection = async (section: DataSection): Promise<void> =>
         devMode,
       } as SeedData);
   
-      worker.on("message", () => {
+      worker.on("message", ({msg}) => {
+
+        const parsedMsg = (JSON.parse(msg) as RenderCallback);
+
+        renderTimes.push(parsedMsg.renderTime);
+        
         bar1.increment();
         res++;
-        if (res == translated.length) {
+        if (res == translated.length) {          
           bar1.stop();
-          resolve();
+          resolve(computeStats(renderTimes));
         }
       });
     }
@@ -103,11 +129,26 @@ export const processDataSection = async (section: DataSection): Promise<void> =>
 
 export const primaryThread = async () => {
 
-
+const stats: any[] = [];
   
 for (const section of config.sections) {  
-  await processDataSection(section);
+  stats.push(await processDataSection(section));
 }
+
+const keys = Object.keys(stats[0]);
+
+const oneLiners = keys.reduce<any>((acc, key) => {
+
+  const arr = stats.map(val => val[key])
+  const numbers = computeStats(arr);
+  return {
+    ...acc,
+    [key]: numbers[key as statKeys]
+  };
+
+}, {}) 
+
+console.table(oneLiners);
 
   process.exit(0);
 
