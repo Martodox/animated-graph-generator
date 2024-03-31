@@ -1,7 +1,7 @@
 import cluster from "cluster";
 import { prepareDataset } from "../helpers/dataset.js";
 import { getSecondsFromHourString } from "../helpers/time.js";
-import { jsonArray } from "../plainData.js";
+import { audioBackground } from "../audioBackground.js";
 import fs from "fs";
 import os from "os";
 import cliProgress from "cli-progress";
@@ -70,7 +70,7 @@ export const processDataSection = async (section: DataSection): Promise<object> 
       (timerStopFromMidinght - timerStartFromMidinght) / 1000;
     const timerStoptSecond = timerStartSecond + timerRunInSeconds;
   
-    jsonArray(raw, fileName);
+    await audioBackground(raw, fileName);
   
     if (config.textOnly) {
       console.log(
