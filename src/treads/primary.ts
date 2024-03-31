@@ -70,7 +70,7 @@ export const processDataSection = async (section: DataSection): Promise<object> 
       (timerStopFromMidinght - timerStartFromMidinght) / 1000;
     const timerStoptSecond = timerStartSecond + timerRunInSeconds;
   
-    await audioBackground(raw, fileName);
+    await audioBackground(raw, fileName, section.addEndingAudioSeconds);
   
     if (config.textOnly) {
       console.log(

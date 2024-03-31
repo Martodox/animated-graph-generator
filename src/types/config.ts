@@ -6,6 +6,7 @@ export interface DataSection {
     "endTime": TimeString,
     "timerStart": TimeString
     "timerEnd": TimeString,
+    "addEndingAudioSeconds"?: number;
 }
 
 export interface Config {
