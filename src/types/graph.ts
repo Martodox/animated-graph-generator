@@ -29,3 +29,7 @@ export interface ChartParams extends Params {
     height: number,
 }
 
+export interface RenderCallback {
+    currentFrame: number;
+    renderTime: number
+}

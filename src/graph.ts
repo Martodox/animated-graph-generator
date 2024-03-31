@@ -4,6 +4,15 @@ import fs from "fs";
 import { getTimerFromSecondsElapsed } from "./helpers/time.js";
 import { ChartParams, GraphOptions } from "./types/graph.js";
 
+const calculateTimeDiff = () => {
+  const start = Date.now();
+  return () => {
+    const diff = Date.now() - start;;
+    return diff;
+  }
+}
+
+
 const getConfigurationForIndex = (
   currentFrame: number,
   chartParams: ChartParams
@@ -159,9 +168,15 @@ export const renderGraph = async (
   ) {
     const configuration = getConfigurationForIndex(currentFrame, chartParams);
 
-
+    const bufferSyncTime = calculateTimeDiff();
     const buffer = chartJSNodeCanvas.renderToBufferSync(configuration);
-    cb(currentFrame);
+    const renderTime = bufferSyncTime();
+    
+    cb(JSON.stringify({
+      currentFrame,
+      renderTime,
+    }));
+    
     fs.writeFile(
       `./out/${options.fileName}/${options.fileName}Loop${(currentFrame + 1)
         .toString()
