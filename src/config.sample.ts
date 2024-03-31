@@ -20,6 +20,7 @@ const config: Config = {
           timerStart: "07:33:04",
           timerEnd: "07:38:08",
           endTime: "07:38:27",
+          addEndingAudioSeconds: 20
         },
       ],
     basedHeight: 1080,
