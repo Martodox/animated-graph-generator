@@ -74,7 +74,7 @@ export const processDataSection = async (section: DataSection): Promise<object> 
   
     if (config.textOnly) {
       console.log(
-        "Only data.txt rendered. Turn off textOnly to render the full chart!"
+        "Only audio file rendered. Turn off textOnly to render the full chart!"
       );
       return;
     }
