@@ -1,6 +1,6 @@
 # polar-animated-graph-generator
 
-![Sample graph](docs/example.png "Sample graph")
+![Sample graph](example.png "Sample graph")
 
 ```js
 const config: Config = {
