@@ -1,0 +1,5 @@
+* [Home](/)
+  * [Config](/?id=config)
+* [Create your own video](how-to.md)
+  * [Hardware requirements](/how-to?id=hardware-requirements)
+* [Youtube examples](youtube-samples.md)
