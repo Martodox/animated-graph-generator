@@ -4,6 +4,7 @@ import csv from "csvtojson";
 import { PolarMeta, PolarSession } from "../types/Polar.js";
 import { getSecondsFromHourString } from "./time.js";
 import { DataSection } from "../types/config.js";
+import { parsePolarCSV } from "./dataParsers/polar.js";
 
 const findPrevNonNull = (data: number[], index: number) => {
   
@@ -22,12 +23,27 @@ const findPrevNonNull = (data: number[], index: number) => {
   return val;
   }
 
+
 export const prepareDataset = async ({
   startTime,
   endTime,
   timerStart,
   timerEnd,
+  use
 }: DataSection) => {
+
+  const sessions: any[] = [];
+
+  if (use.findIndex(val => val.source === "polarCsv")) {
+    sessions.push({
+      source: "polarCsv",
+      ...parsePolarCSV({
+        src: config.sources.polarCsv
+      })
+    })
+  }
+
+
   const input = fs.readFileSync(config.inputFile);
   const individualLines = input.toString().split("\n");
   const header = [individualLines.shift(), individualLines.shift()].join("\n");

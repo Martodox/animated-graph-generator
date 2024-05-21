@@ -1,31 +1,52 @@
 import { Config } from "./types/config.js";
 
 const config: Config = {
-    inputFile: "./in/02-07_08-24-58.CSV",
-    offsetInSeconds: 20,
-    stepResolution: 30,
-    textOnly: true,
-    devMode: false,
-    sections: [
+  sources: {
+    polarCsv: "./in/PolarExport_2024-05-10_06-59-01.CSV",
+    garminFit: "./in/15411374432_ACTIVITY.fit",
+    oxiwearCsv: "./in/export-2024-05-17_15_00_00-19_00_00_805c50c9-a7bf-4813-adf4-5a0543951542.csv",
+  },
+  offsetInSeconds: 27,
+  stepResolution: 30,
+  textOnly: false,
+  sections: [
+    {
+      name: "section-1",
+      startTime: "08:31:29", 
+      timerStart: "08:31:50", 
+      timerEnd: "08:36:09",
+      endTime: "08:36:35",
+      use: [
         {
-          name: "4",
-          startTime: "07:24:59",
-          timerStart: "07:25:23",
-          timerEnd: "07:30:01",
-          endTime: "07:30:14",
+          source: "polarCsv"
+        }
+      ]
+    },
+    {
+      name: "section-2",
+      startTime: "08:31:29", 
+      timerStart: "08:31:50", 
+      timerEnd: "08:36:09",
+      endTime: "08:36:35",
+      use: [
+        {
+          source: "polarCsv",
+          offsetInSeconds: 2,
+          label: "hearth rate"
         },
         {
-          name: "5",
-          startTime: "07:32:43",
-          timerStart: "07:33:04",
-          timerEnd: "07:38:08",
-          endTime: "07:38:27",
-          addEndingAudioSeconds: 20
+          source: "polarCsv"
         },
-      ],
-    basedHeight: 1080,
-    baseWidth: 1920,
-    sizeMultiplier: 1,
-}
+        {
+          source: "polarCsv"
+        }
+      ]
+    },
+  ],
+  devMode: false,
+  basedHeight: 1080,
+  baseWidth: 1920,
+  sizeMultiplier: 1,
+};
 
 export default config;
