@@ -47,6 +47,11 @@ export const processDataSection = async (section: DataSection): Promise<object> 
     let fileName;
     if (devMode) {
       fileName = "chart";
+      try {
+        fs.rmSync(`./out/${fileName}`, { recursive: true, force: true });
+      } catch (errpr) {
+        console.log("rm dir error", errpr)
+      }
     } else {
       fileName = `chart - ${section.name}`;
     }
@@ -70,7 +75,13 @@ export const processDataSection = async (section: DataSection): Promise<object> 
       (timerStopFromMidinght - timerStartFromMidinght) / 1000;
     const timerStoptSecond = timerStartSecond + timerRunInSeconds;
   
-    await audioBackground(raw, fileName, section.addEndingAudioSeconds);
+    try {
+      await audioBackground(raw, fileName, section.addEndingAudioSeconds);
+    } catch (error) {
+      console.log("Audio file not generated due to error", error)
+    } 
+    
+    
   
     if (config.textOnly) {
       console.log(

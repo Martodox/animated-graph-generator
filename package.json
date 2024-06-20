@@ -20,9 +20,8 @@
     "chartjs-to-image": "^1.2.2",
     "cli-progress": "^3.12.0",
     "csvtojson": "^2.0.10",
-    "percentile": "^1.6.0",
-    "tsc": "^2.0.4",
-    "typescript": "^5.3.3"
+    "percentile": "^1.6.0",    
+    "typescript": "^5.4.5"
   },
   "devDependencies": {
     "@types/cli-progress": "^3.11.5",
