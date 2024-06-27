@@ -33,17 +33,23 @@ const computeStats = (times: number[]): {[key in statKeys]: number|number[]} => 
 
 export const processDataSection = async (section: DataSection): Promise<object> => {
   return new Promise(async (resolve) => {
+    
     const {
       raw,
-      translated,
-      devMode,
-      stepResolution,
-      timerStart,
-      offsetInSeconds,
-      timerEnd,
-      startTime,
+      translated,      
     } = await prepareDataset(section);
   
+    const {
+      startTime,
+      timerEnd,      
+      timerStart
+    } = section;
+
+      const offsetInSeconds = config.offsetInSeconds;
+      const stepResolution = config.stepResolution;
+      const devMode = config.devMode;
+
+
     let fileName;
     if (devMode) {
       fileName = "chart";

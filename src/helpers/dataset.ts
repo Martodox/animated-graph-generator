@@ -26,19 +26,24 @@ const findPrevNonNull = (data: number[], index: number) => {
 
 export const prepareDataset = async ({
   startTime,
-  endTime,
-  timerStart,
-  timerEnd,
+  endTime,  
   use
 }: DataSection) => {
 
   const sessions: any[] = [];
 
-  if (use.findIndex(val => val.source === "polarCsv")) {
+  
+
+
+  if (use['polarCsv']) {
     sessions.push({
       source: "polarCsv",
       ...parsePolarCSV({
-        src: config.sources.polarCsv
+        src: config.sources.polarCsv,
+        startTime,
+        endTime,
+        offsetInSeconds: config.offsetInSeconds,
+        ...use['polarCsv']
       })
     })
   }
@@ -98,12 +103,6 @@ export const prepareDataset = async ({
 
   return {
     raw: croppedSessions,
-    translated,
-    startTime: startTime,
-    timerStart: timerStart,
-    timerEnd: timerEnd,
-    offsetInSeconds: config.offsetInSeconds,
-    stepResolution: config.stepResolution,
-    devMode: config.devMode,
+    translated
   };
 };

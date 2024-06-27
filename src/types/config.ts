@@ -10,11 +10,10 @@ export interface DataSection {
     timerEnd: TimeString,
     addEndingAudioSeconds?: number;
     prependAudioSeconds?: number;
-    use: SourceUse[],
+    use: { [k in DataSource]?: SourceUse },
 }
 
 export interface SourceUse {
-    source: DataSource,
     label?: string,
     offsetInSeconds?: number,
 }
