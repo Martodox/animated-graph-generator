@@ -76,7 +76,7 @@ export const processDataSection = async (section: DataSection): Promise<object> 
     const timerStoptSecond = timerStartSecond + timerRunInSeconds;
   
     try {
-      await audioBackground(raw, fileName, section.addEndingAudioSeconds);
+      await audioBackground(raw, fileName, section.addEndingAudioSeconds, section.prependAudioSeconds);
     } catch (error) {
       console.log("Audio file not generated due to error", error)
     } 

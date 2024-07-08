@@ -7,6 +7,7 @@ export interface DataSection {
     "timerStart": TimeString
     "timerEnd": TimeString,
     "addEndingAudioSeconds"?: number;
+    "prependAudioSeconds"?: number;
 }
 
 export interface Config {
