@@ -8,4 +8,4 @@ export interface DataParserConfig extends SourceUse {
 }
 
 
-export type DataParser = (config: DataParserConfig) => number[];
+export type DataParser = (fileName: string) => number[];

@@ -1,5 +1,5 @@
 import cluster from "cluster";
-import { prepareDataset } from "../helpers/dataset.js";
+// import { prepareDataset } from "../helpers/dataset.js";
 import { getSecondsFromHourString } from "../helpers/time.js";
 import { audioBackground } from "../audioBackground.js";
 import fs from "fs";
@@ -14,6 +14,7 @@ import {
 } from '@basementuniverse/stats';
 
 import percentile from 'percentile';
+import { extractDataSets } from "../helpers/dataParsers/extractor.js";
 const numberOfCPUs = os.cpus().length;
 const renderTimes: number[] = [];
 
@@ -31,141 +32,144 @@ const computeStats = (times: number[]): {[key in statKeys]: number|number[]} => 
   
 }
 
-export const processDataSection = async (section: DataSection): Promise<object> => {
-  return new Promise(async (resolve) => {
+// export const processDataSection = async (section: DataSection): Promise<object> => {
+//   return new Promise(async (resolve) => {
     
-    const {
-      raw,
-      translated,      
-    } = await prepareDataset(section);
+//     const {
+//       raw,
+//       translated,      
+//     } = await prepareDataset(section);
   
-    const {
-      startTime,
-      timerEnd,      
-      timerStart
-    } = section;
+//     const {
+//       startTime,
+//       timerEnd,      
+//       timerStart
+//     } = section;
 
-      const offsetInSeconds = config.offsetInSeconds;
-      const stepResolution = config.stepResolution;
-      const devMode = config.devMode;
+//       const offsetInSeconds = config.offsetInSeconds;
+//       const stepResolution = config.stepResolution;
+//       const devMode = config.devMode;
 
 
-    let fileName;
-    if (devMode) {
-      fileName = "chart";
-      try {
-        fs.rmSync(`./out/${fileName}`, { recursive: true, force: true });
-      } catch (errpr) {
-        console.log("rm dir error", errpr)
-      }
-    } else {
-      fileName = `chart - ${section.name}`;
-    }
+//     let fileName;
+//     if (devMode) {
+//       fileName = "chart";
+//     } else {
+//       fileName = `chart - ${section.name}`;
+//     }
   
-    const timerStartFromMidinght = getSecondsFromHourString(
-      timerStart,
-      offsetInSeconds
-    );
-    const timerStopFromMidinght = getSecondsFromHourString(
-      timerEnd,
-      offsetInSeconds
-    );
-    const videoRecordingStart = getSecondsFromHourString(
-      startTime,
-      offsetInSeconds
-    );
+//     const timerStartFromMidinght = getSecondsFromHourString(
+//       timerStart,
+//       offsetInSeconds
+//     );
+//     const timerStopFromMidinght = getSecondsFromHourString(
+//       timerEnd,
+//       offsetInSeconds
+//     );
+//     const videoRecordingStart = getSecondsFromHourString(
+//       startTime,
+//       offsetInSeconds
+//     );
   
-    const timerStartSecond =
-      (timerStartFromMidinght - videoRecordingStart) / 1000;
-    const timerRunInSeconds =
-      (timerStopFromMidinght - timerStartFromMidinght) / 1000;
-    const timerStoptSecond = timerStartSecond + timerRunInSeconds;
+//     const timerStartSecond =
+//       (timerStartFromMidinght - videoRecordingStart) / 1000;
+//     const timerRunInSeconds =
+//       (timerStopFromMidinght - timerStartFromMidinght) / 1000;
+//     const timerStoptSecond = timerStartSecond + timerRunInSeconds;
   
-    try {
-      await audioBackground(raw, fileName, section.addEndingAudioSeconds, section.prependAudioSeconds);
-    } catch (error) {
-      console.log("Audio file not generated due to error", error)
-    } 
-    
-    
+//     await audioBackground(raw, fileName, section.addEndingAudioSeconds);
   
-    if (config.textOnly) {
-      console.log(
-        "Only audio file rendered. Turn off textOnly to render the full chart!"
-      );
-      return;
-    }
+//     if (config.textOnly) {
+//       console.log(
+//         "Only audio file rendered. Turn off textOnly to render the full chart!"
+//       );
+//       return;
+//     }
   
-    try {
-      fs.mkdirSync(`./out/${fileName}`);
-    } catch {}
+//     try {
+//       fs.mkdirSync(`./out/${fileName}`);
+//     } catch {}
   
-    let res: number = 0;
+//     let res: number = 0;
   
-    const bar1 = new cliProgress.SingleBar(
-      {
-        format: `${fileName} | {bar} {percentage}% | {value}/{total} | ETA: {eta_formatted} | Elapsed {duration}s`,
-        etaBuffer: 1000,
-        etaAsynchronousUpdate: true,
-      },
+//     const bar1 = new cliProgress.SingleBar(
+//       {
+//         format: `${fileName} | {bar} {percentage}% | {value}/{total} | ETA: {eta_formatted} | Elapsed {duration}s`,
+//         etaBuffer: 1000,
+//         etaAsynchronousUpdate: true,
+//       },
       
-      cliProgress.Presets.shades_classic
-    );
-    bar1.start(translated.length, 0);
+//       cliProgress.Presets.shades_classic
+//     );
+//     bar1.start(translated.length, 0);
   
-    for (let i = 0; i < numberOfCPUs; i++) {
-      let worker = cluster.fork({
-        chunk: i,
-        chunks: numberOfCPUs,
-        fileName,
-        translated: JSON.stringify(translated),
-        timerStartSecond,
-        timerStoptSecond,
-        stepResolution,
-        devMode,
-      } as SeedData);
+//     for (let i = 0; i < numberOfCPUs; i++) {
+//       let worker = cluster.fork({
+//         chunk: i,
+//         chunks: numberOfCPUs,
+//         fileName,
+//         translated: JSON.stringify(translated),
+//         timerStartSecond,
+//         timerStoptSecond,
+//         stepResolution,
+//         devMode,
+//       } as SeedData);
   
-      worker.on("message", ({msg}) => {
+//       worker.on("message", ({msg}) => {
 
-        const parsedMsg = (JSON.parse(msg) as RenderCallback);
+//         const parsedMsg = (JSON.parse(msg) as RenderCallback);
 
-        renderTimes.push(parsedMsg.renderTime);
+//         renderTimes.push(parsedMsg.renderTime);
         
-        bar1.increment();
-        res++;
-        if (res == translated.length) {          
-          bar1.stop();
-          resolve(computeStats(renderTimes));
-        }
-      });
-    }
-  })
-}
+//         bar1.increment();
+//         res++;
+//         if (res == translated.length) {          
+//           bar1.stop();
+//           resolve(computeStats(renderTimes));
+//         }
+//       });
+//     }
+//   })
+// }
 
 
 
 export const primaryThread = async () => {
 
-const stats: any[] = [];
+
+    const normalisedDataSets = extractDataSets(config.sources);
+
+
+
+  // const {
+  //   raw,
+  //   translated,      
+  // } = await prepareDataset(section);
+
+
+// const stats: any[] = [];
   
-for (const section of config.sections) {  
-  stats.push(await processDataSection(section));
-}
 
-const keys = Object.keys(stats[0]);
 
-const oneLiners = keys.reduce<any>((acc, key) => {
 
-  const arr = stats.map(val => val[key])
-  const numbers = computeStats(arr);
-  return {
-    ...acc,
-    [key]: numbers[key as statKeys]
-  };
+// for (const section of config.sections) {  
+//   stats.push(await processDataSection(section));
+// }
 
-}, {}) 
+// const keys = Object.keys(stats[0]);
 
-console.table(oneLiners);
+// const oneLiners = keys.reduce<any>((acc, key) => {
+
+//   const arr = stats.map(val => val[key])
+//   const numbers = computeStats(arr);
+//   return {
+//     ...acc,
+//     [key]: numbers[key as statKeys]
+//   };
+
+// }, {}) 
+
+// console.table(oneLiners);
 
   process.exit(0);
 

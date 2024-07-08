@@ -1,11 +1,10 @@
-import { DataParser, DataParserConfig } from "../../types/dataparsers.js";
+// import { DataParser, DataParserConfig } from "../../types/dataparsers.js";
 
 
 
 
-export const parsePolarCSV: DataParser = (config: DataParserConfig) => {
+export const polarCsv = (fileName: string) => {
     
-    // config.
+    return fileName;
     
-    return [];
 }

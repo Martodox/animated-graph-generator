@@ -2,8 +2,11 @@
 
 
 
-export const parseOxiwearCSV = () => {
+export const oxiwearCsv = (fileName: string) => {
     
+    return fileName;
+    
+}
 
     // const meta: PolarMeta[] = [];
   
@@ -32,4 +35,4 @@ export const parseOxiwearCSV = () => {
   
     // keyedSessionsWithNulls = keyedSessionsWithNulls.map((_: any, index: any) => findPrevNonNull(keyedSessionsWithNulls, index))
 
-}
+// }

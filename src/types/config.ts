@@ -19,7 +19,7 @@ export interface SourceUse {
 }
 
 export interface Config {
-    sources: { [k in DataSource]: string },
+    sources: { [k in DataSource]?: string },
     offsetInSeconds: number,
     stepResolution: number,
     textOnly: boolean,

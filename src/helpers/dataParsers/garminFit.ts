@@ -1,3 +1,5 @@
-export const parseGarminFIT = () => {
+export const garminFit = (fileName: string) => {
+    
+    return fileName;
     
 }
