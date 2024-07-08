@@ -4,7 +4,7 @@ import { oxiwearCsv } from "./oxiwear.js";
 import { polarCsv } from "./polar.js";
 
 
-export const extractDataSets = (sources: { [k in DataSource]?: string }) => {
+export const extractDataSets = async (sources: { [k in DataSource]?: string }) => {
 
     type sourceType = { [k in DataSource]: (fileName: string) => any }
 
@@ -18,7 +18,7 @@ export const extractDataSets = (sources: { [k in DataSource]?: string }) => {
 
     for (const source in sources) {
         const s = source as DataSource; 
-        datasets[s] = parserMap[s](sources[s]!)        
+        datasets[s] = await parserMap[s](sources[s]!)        
     }
 
     console.log(datasets);
