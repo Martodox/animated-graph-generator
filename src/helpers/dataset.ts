@@ -1,12 +1,13 @@
 import config from "../config.js";
 import fs from "fs";
-import csv from "csvtojson";
+// import csv from "csvtojson";
 import { PolarMeta, PolarSession } from "../types/Polar.js";
 import { getSecondsFromHourString } from "./time.js";
 import { DataSection } from "../types/config.js";
 // import { parsePolarCSV } from "./dataParsers/polar.js";
 
-const findPrevNonNull = (data: number[], index: number) => {
+
+export const findPrevNonNull = (data: number[], index: number) => {
   
   
   if (!!data[index]) return data[index];
@@ -22,7 +23,6 @@ const findPrevNonNull = (data: number[], index: number) => {
   }
   return val;
   }
-
 
 // export const prepareDataset = async ({
 //   startTime,

@@ -7,5 +7,6 @@ export interface DataParserConfig extends SourceUse {
     sourceOffsetInSeconds: number
 }
 
+export type KeyedDataset = { [key: number]: number }
 
 export type DataParser = (fileName: string) => number[];
