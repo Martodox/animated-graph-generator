@@ -7,7 +7,6 @@ export const getTimerFromSecondsElapsed = (seconds: number) => {
 
 
 export const getSecondsFromHourString = (input: string, offsetInSeconds: number = 0) => {
-    console.log(`2000-01-01:${input}`)
     const date = new Date(`2000-01-01:${input}`);
     return Math.floor(date.getTime()/1000) + (offsetInSeconds);    
 } 

@@ -3,106 +3,67 @@ import fs from "fs";
 // import csv from "csvtojson";
 import { PolarMeta, PolarSession } from "../types/Polar.js";
 import { getSecondsFromHourString } from "./time.js";
-import { DataSection } from "../types/config.js";
-// import { parsePolarCSV } from "./dataParsers/polar.js";
+import { DataSection, DataSource, NormalisedDataSections } from "../types/config.js";
+import { KeyedDataset } from "../types/dataparsers.js";
 
 
-export const findPrevNonNull = (data: number[], index: number) => {
-  
-  
-  if (!!data[index]) return data[index];
-  let iteratorIndex = index;
-  let val = data[iteratorIndex];
-
-  while (val === 0 && index > 0) {
-    val = data[--index]    
-  }
-
-  while (val === 0) {
-    val = data[++index]    
-  }
-  return val;
-  }
-
-// export const prepareDataset = async ({
-//   startTime,
-//   endTime,  
-//   use
-// }: DataSection) => {
-
-//   const sessions: any[] = [];
-
-  
 
 
-//   if (use['polarCsv']) {
-//     sessions.push({
-//       source: "polarCsv",
-//       ...parsePolarCSV({
-//         src: config.sources.polarCsv,
-//         startTime,
-//         endTime,
-//         offsetInSeconds: config.offsetInSeconds,
-//         ...use['polarCsv']
-//       })
-//     })
-//   }
+export const prepareDataset = async (normalisedDataSets: { [k in DataSource]?: KeyedDataset }): Promise<NormalisedDataSections> => {
+
+  const normalisedDataSections: NormalisedDataSections = [];
 
 
-//   const input = fs.readFileSync(config.inputFile);
-//   const individualLines = input.toString().split("\n");
-//   const header = [individualLines.shift(), individualLines.shift()].join("\n");
+  config.sections.forEach(section => {
 
-//   const meta: PolarMeta[] = await csv().fromString(header);
-  
-//   let session: number[] = (await csv().fromString(
-//     individualLines.join("\n")
-//   )).map((val) => +val["HR (bpm)"]);
+    const startTime = getSecondsFromHourString(section.startTime, config.secondsAligment);
+    const endTime = getSecondsFromHourString(section.endTime, config.secondsAligment);
 
-//   session = session.map((_, index) => findPrevNonNull(session, index))
-  
+    const timerStart = getSecondsFromHourString(section.timerStart, config.secondsAligment);
+    const timerEnd = getSecondsFromHourString(section.timerEnd, config.secondsAligment);
+
+    const timerStartIndex = timerStart - startTime;
+    const timerSeconds = timerEnd - timerStart;
+    const graphSeconds = endTime - startTime;
+
+    const slicedOutput: any = {}
+    for (const k in normalisedDataSets) {
+      
+      slicedOutput[k] = {
+        label: section.use[k as DataSource]?.label,
+        dataPoints: []
+      }
+
+      for (let i = startTime; i <= startTime + graphSeconds; i++) {
+        slicedOutput[k].dataPoints.push(normalisedDataSets[k as DataSource]![i]);
+      }
 
 
-//   const polarSessionStartFromMidnight = getSecondsFromHourString(
-//     meta[0]["Start time"]
-//   );
-//   const videoRecordingStart = getSecondsFromHourString(
-//     startTime,
-//     config.offsetInSeconds
-//   );
+    }
 
-//   const videoRecordingStop = getSecondsFromHourString(
-//     endTime,
-//     config.offsetInSeconds
-//   );
+    normalisedDataSections.push({
+      name: section.name,
+      timerStartIndex,
+      timerSeconds,
+      use: slicedOutput
+    })
 
-//   const runTimeInSeconds = (videoRecordingStop - videoRecordingStart) / 1000;
+  })
 
-//   const secondsToRemove =
-//     (videoRecordingStart - polarSessionStartFromMidnight) / 1000;
-//   const croppedSessions = session.slice(
-//     secondsToRemove,
-//     -(session.length - runTimeInSeconds - secondsToRemove)
-//   );
+  //   for (let i = 0; i < croppedSessions.length - 1; i++) {
+  //     const diff = +croppedSessions[i + 1] - +croppedSessions[i];
+  //     const increment = diff / config.stepResolution;
 
-//   let translated = [];
-//   if (config.stepResolution > 1) {
-//     for (let i = 0; i < croppedSessions.length - 1; i++) {
-//       const diff = +croppedSessions[i + 1] - +croppedSessions[i];
-//       const increment = diff / config.stepResolution;
+  //     translated.push(+croppedSessions[i]);
 
-//       translated.push(+croppedSessions[i]);
+  //     for (let n = 1; n < config.stepResolution; n++) {
+  //       translated.push(+(+croppedSessions[i] + increment * n).toFixed(2));
+  //     }
+  //   }
 
-//       for (let n = 1; n < config.stepResolution; n++) {
-//         translated.push(+(+croppedSessions[i] + increment * n).toFixed(2));
-//       }
-//     }
-//   } else {
-//     translated = croppedSessions;
-//   }
 
-//   return {
-//     raw: croppedSessions,
-//     translated
-//   };
-// };
+
+
+  return normalisedDataSections;
+
+};

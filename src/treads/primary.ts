@@ -1,5 +1,5 @@
 import cluster from "cluster";
-// import { prepareDataset } from "../helpers/dataset.js";
+import { prepareDataset } from "../helpers/dataset.js";
 import { getSecondsFromHourString } from "../helpers/time.js";
 import { audioBackground } from "../audioBackground.js";
 import fs from "fs";
@@ -35,19 +35,8 @@ const computeStats = (times: number[]): {[key in statKeys]: number|number[]} => 
 // export const processDataSection = async (section: DataSection): Promise<object> => {
 //   return new Promise(async (resolve) => {
     
-//     const {
-//       raw,
-//       translated,      
-//     } = await prepareDataset(section);
-  
-//     const {
-//       startTime,
-//       timerEnd,      
-//       timerStart
-//     } = section;
 
-//       const offsetInSeconds = config.offsetInSeconds;
-//       const stepResolution = config.stepResolution;
+
 //       const devMode = config.devMode;
 
 
@@ -58,24 +47,7 @@ const computeStats = (times: number[]): {[key in statKeys]: number|number[]} => 
 //       fileName = `chart - ${section.name}`;
 //     }
   
-//     const timerStartFromMidinght = getSecondsFromHourString(
-//       timerStart,
-//       offsetInSeconds
-//     );
-//     const timerStopFromMidinght = getSecondsFromHourString(
-//       timerEnd,
-//       offsetInSeconds
-//     );
-//     const videoRecordingStart = getSecondsFromHourString(
-//       startTime,
-//       offsetInSeconds
-//     );
-  
-//     const timerStartSecond =
-//       (timerStartFromMidinght - videoRecordingStart) / 1000;
-//     const timerRunInSeconds =
-//       (timerStopFromMidinght - timerStartFromMidinght) / 1000;
-//     const timerStoptSecond = timerStartSecond + timerRunInSeconds;
+
   
 //     await audioBackground(raw, fileName, section.addEndingAudioSeconds);
   
@@ -137,16 +109,11 @@ const computeStats = (times: number[]): {[key in statKeys]: number|number[]} => 
 export const primaryThread = async () => {
 
 
-    const normalisedDataSets = extractDataSets(config.sources);
+    const normalisedDataSets = await extractDataSets(config.sources);
 
+  const graphableDataSet = await prepareDataset(normalisedDataSets);
 
-
-  // const {
-  //   raw,
-  //   translated,      
-  // } = await prepareDataset(section);
-
-
+  
 // const stats: any[] = [];
   
 

@@ -1,3 +1,5 @@
+import { KeyedDataset } from "./dataparsers.js";
+
 export type TimeString = string;
 
 export type DataSource = "polarCsv" | "garminFit" | "oxiwearCsv";
@@ -13,14 +15,26 @@ export interface DataSection {
     use: { [k in DataSource]?: SourceUse },
 }
 
+export type NormalisedDataSections = {
+    name: string;
+    timerStartIndex: number,
+    timerSeconds: number,
+    use: { [k in DataSource]?: {
+        label: string,
+        dataPoints: number[]
+    } },
+}[]
+
 export interface SourceUse {
-    label?: string,
-    offsetInSeconds?: number,
+    label?: string
 }
 
+export type Sources = { [k in DataSource]?: SourcesConfig };
+export type SourcesConfig = { src: string, secondsAligment?: number };
+
 export interface Config {
-    sources: { [k in DataSource]?: string },
-    offsetInSeconds: number,
+    sources: Sources,
+    secondsAligment: number,
     stepResolution: number,
     textOnly: boolean,
     sections: DataSection[],
@@ -39,4 +53,4 @@ export interface SeedData {
     timerStoptSecond: number;
     stepResolution: number;
     devMode: boolean;
-  }
+}

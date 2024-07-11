@@ -1,10 +1,12 @@
+import { SourcesConfig } from "../../types/config.js";
+import { KeyedDataset } from "../../types/dataparsers.js";
 
 
 
 
-export const oxiwearCsv = (fileName: string) => {
-    
-    return fileName;
+export const oxiwearCsv = (config: SourcesConfig): KeyedDataset => {
+    config;
+    return {};
     
 }
 

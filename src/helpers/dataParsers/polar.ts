@@ -1,37 +1,31 @@
-// import { DataParser, DataParserConfig } from "../../types/dataparsers.js";
 import fs from "fs";
 
-import { PolarMeta } from "../../types/Polar.js";
-import { parse, } from "csv-parse/sync";
+import { parse } from "csv-parse/sync";
 import { getSecondsFromHourString } from "../time.js";
-import { findPrevNonNull } from "../dataset.js";
 import { KeyedDataset } from "../../types/dataparsers.js";
+import { SourcesConfig } from "../../types/config.js";
 
 
 const fillZeroWithPrevNonNull = (set: KeyedDataset): KeyedDataset => {
+    const keys = Object.keys(set);
 
-    const keys = Object.keys(set) as unknown as number[];
-
-    let keyedSessionsWithNulls: number[] = [];
-    let startTimestamp = keys[0]
-    let endTimestamp = keys[keys.length - 1];
-    for (let i = startTimestamp; i <= endTimestamp; i++) {
-        keyedSessionsWithNulls.push(+set[i] || 0)
+    let prevNotNull = set[+keys[0]];
+    let prevNotNullIndex = 0;
+    while (prevNotNull === 0) {        
+        prevNotNull = set[+keys[prevNotNullIndex++]];
     }
 
-    keyedSessionsWithNulls = keyedSessionsWithNulls.map((_: any, index: any) => findPrevNonNull(keyedSessionsWithNulls, index))
-
-    
-
-    for (let i = 0; i <= endTimestamp - startTimestamp; i++) {
-        set[keys[i]] = keyedSessionsWithNulls[i]
+    for (const key in set) {
+        prevNotNull = set[key] === 0 ? prevNotNull : set[key];
+        set[key] = prevNotNull
     }
+
     return set;
 }
 
-export const polarCsv = async (fileName: string) => {
+export const polarCsv = (config: SourcesConfig): KeyedDataset => {
 
-    const input = fs.readFileSync(fileName);
+    const input = fs.readFileSync(config.src);
 
 
     const individualLines = input.toString().split("\n");
@@ -43,7 +37,7 @@ export const polarCsv = async (fileName: string) => {
         skip_empty_lines: true
     })[0]['Start time'];
 
-    const startSecond = getSecondsFromHourString(startTime);
+    const startSecond = getSecondsFromHourString(startTime) + (config.secondsAligment || 0);
 
     let session: KeyedDataset = parse(individualLines.join("\n"), {
         columns: true,
@@ -53,9 +47,6 @@ export const polarCsv = async (fileName: string) => {
         return acc;
     }, {});
 
-    session = fillZeroWithPrevNonNull(session);
-
-
-    return fileName;
+    return fillZeroWithPrevNonNull(session);
 
 }

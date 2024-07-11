@@ -2,11 +2,17 @@ import { Config } from "./types/config.js";
 
 const config: Config = {
   sources: {
-    polarCsv: "./in/Karolina.CSV"
-    // garminFit: "./in/15411374432_ACTIVITY.fit",
-    // oxiwearCsv: "./in/export-2024-05-17_15_00_00-19_00_00_805c50c9-a7bf-4813-adf4-5a0543951542.csv",
+    polarCsv: {
+      src: "./in/Karolina.CSV",
+    }
+    // garminFit: {
+    //   src: "./in/15411374432_ACTIVITY.fit",
+    // }
+    // oxiwearCsv: {
+    //   src: "./in/export-2024-05-17_15_00_00-19_00_00_805c50c9-a7bf-4813-adf4-5a0543951542.csv",
+    // }
   },
-  offsetInSeconds: 27,
+  secondsAligment: 27,
   stepResolution: 30,
   textOnly: false,
   sections: [
@@ -19,8 +25,6 @@ const config: Config = {
       use: {
         polarCsv: { 
           label: "elo",
-          offsetInSeconds: 12,
-
         }
       }
     }
