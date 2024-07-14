@@ -1,40 +1,39 @@
 import { SourcesConfig } from "../../types/config.js";
 import { KeyedDataset } from "../../types/dataparsers.js";
+import { parse } from "csv-parse/sync";
+import fs from "fs";
+import { parseOxiwearTimeToSeconds } from "../time.js";
+import { OxiwearDataPoint } from "../../types/oxiwear.js";
+import { fillZeroWithPrevNonNull } from "./utils.js";
+
 
 
 
 
 export const oxiwearCsv = (config: SourcesConfig): KeyedDataset => {
-    config;
-    return {};
+
+    const input = fs.readFileSync(config.src).toString();
+
+    let data: OxiwearDataPoint[] = parse(input, {
+        columns: true,
+        skip_empty_lines: true
+    })
+
+    const dataSetAlignment = (config.secondsAligment || 0);
+
+    const startTimestamp = parseOxiwearTimeToSeconds(data[0].reading_time) + dataSetAlignment;
+    const endTimestamp = parseOxiwearTimeToSeconds(data[data.length - 1].reading_time) + dataSetAlignment;
+
+    let session: KeyedDataset = {}
+
+    for (let i = startTimestamp; i <= endTimestamp; i++) {
+      session[i] = 0;
+    }
+  
+    data.forEach((val) => {
+      session[parseOxiwearTimeToSeconds(val.reading_time) + dataSetAlignment] = +val.spo2;
+    })
+
+    return fillZeroWithPrevNonNull(session)
     
 }
-
-    // const meta: PolarMeta[] = [];
-  
-    // let session: any[] = (await csv().fromFile(config.inputFile)).map(val => ({
-    //   time: new Date(val['reading_time']).getTime()/1000,
-    //   spo2: val['spo2']
-    // }))
-  
-  
-    // const keyedSessions = session.reduce((acc, val) => {
-  
-    //   acc[val.time] = val.spo2;
-    //   return acc;
-  
-    // }, {})
-    // // console.log(keyedSessions);
-    // let keyedSessionsWithNulls: any = [];
-    // let startTimestamp = session[0]['time'];
-    // let endTimestamp = session[session.length - 1]['time'];
-    
-    // for (let i = startTimestamp; i <= endTimestamp; i++) {
-    //   keyedSessionsWithNulls.push(+keyedSessions[i] || 0)
-    // }
-  
-  
-  
-    // keyedSessionsWithNulls = keyedSessionsWithNulls.map((_: any, index: any) => findPrevNonNull(keyedSessionsWithNulls, index))
-
-// }

@@ -13,7 +13,6 @@ export const prepareDataset = async (normalisedDataSets: { [k in DataSource]?: K
 
   const normalisedDataSections: NormalisedDataSection[] = [];
 
-
   config.sections.forEach(section => {
 
     const startTime = getSecondsFromHourString(section.startTime, config.secondsAligment);
@@ -27,18 +26,20 @@ export const prepareDataset = async (normalisedDataSets: { [k in DataSource]?: K
     const graphSeconds = endTime - startTime;
 
     const slicedOutput: any = {}
-    for (const k in normalisedDataSets) {
-      
+    for (const k in section.use) {
+
+      if (!normalisedDataSets[k as DataSource]) {
+        throw Error(`${k} is not defined in sources`);
+      }
+
       slicedOutput[k] = {
         label: section.use[k as DataSource]?.label,
         dataPoints: []
       }
-
       for (let i = startTime; i <= startTime + graphSeconds; i++) {
         slicedOutput[k].dataPoints.push(normalisedDataSets[k as DataSource]![i]);
       }
-
-
+    
     }
 
     normalisedDataSections.push({

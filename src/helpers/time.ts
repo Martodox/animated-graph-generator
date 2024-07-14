@@ -19,6 +19,16 @@ export const getSecondsFromHourString = (input: string, offsetInSeconds: number 
 
 //////////////////////////////
 
+export const parseOxiwearTimeToSeconds = (date: string, offset: number = 0): number => {
+    const split = date.split(" ")[1];
+    return Math.floor(new Date(`2000-01-01T${split}`).getTime() / 1000) + offset;
+}
+
+
+export const parseGarminTimeToSeconds = (date: Date, offset: number = 0): number => {
+    const split = date.toISOString().split("T")[1].split(":")
+    return Math.floor(new Date(`2000-01-01T${split[0]}:${split[1]}:${split[2].split('.')[0]}`).getTime() / 1000) + offset;
+}
 
 export const parsePolarTime = (timeString: string): number => {
     const split = timeString.split(":")

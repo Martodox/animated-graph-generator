@@ -21,7 +21,7 @@ export const extractDataSets = async (sources: Sources): Promise<{[k in DataSour
         const s = source as DataSource; 
         datasets[s] = await parserMap[s](sources[s]!)        
     }
-
+    
     return datasets
 
 }

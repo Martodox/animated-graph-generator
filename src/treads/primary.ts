@@ -46,11 +46,10 @@ const processDataSection = async (section: NormalisedDataSection): Promise<objec
       fileName = `chart - ${section.name}`;
     }
 
-
-    if (section.use['polarCsv']) {
-      await audioBackground(section.use['polarCsv'].dataPoints, fileName, section.appendAudioSeconds, section.prependAudioSeconds);
-    }
-
+    if (section.use['polarCsv'] || section.use['garminFit']) {
+      const use = section.use['polarCsv'] ? section.use['polarCsv'] : section.use['garminFit'];
+      await audioBackground(use!.dataPoints, fileName, section.appendAudioSeconds, section.prependAudioSeconds);
+    }    
 
     if (config.stepResolution > 1) {
       for (const key in section.use) {
@@ -135,10 +134,8 @@ export const primaryThread = async () => {
 
 
   const normalisedDataSets = await extractDataSets(config.sources);
-
+  
   const graphableDataSet = await prepareDataset(normalisedDataSets);
-
-
 
   const stats: any[] = [];
 

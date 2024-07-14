@@ -13,6 +13,32 @@ const calculateTimeDiff = () => {
   }
 }
 
+const datasetLine: {[key in DataSource]: any} = {
+  "oxiwearCsv": {
+    borderColor: "rgb(0, 49, 225)",
+    tension: 0.2,
+    weight: 3,
+    clip: 100,
+    borderJoinStyle: "bevel",
+    borderWidth: 6,
+  },
+  "garminFit": {
+    borderColor: "rgb(225, 112, 0)",
+    tension: 0.2,
+    weight: 3,
+    clip: 100,
+    borderJoinStyle: "bevel",
+    borderWidth: 10,
+  },
+  "polarCsv": {
+    borderColor: "rgb(225, 112, 0)",
+    tension: 0.2,
+    weight: 3,
+    clip: 100,
+    borderJoinStyle: "bevel",
+    borderWidth: 10,
+  }
+}
 
 const getConfigurationForIndex = (
   currentFrame: number,
@@ -28,8 +54,9 @@ const getConfigurationForIndex = (
         chartParams.timerStartSecond,
         chartParams.timerStoptSecond
       )}`,
+
       data: [],
-      yAxisID: "yAxis2",
+      yAxisID: "yAxis2"
     }
   ];
 
@@ -37,40 +64,45 @@ const getConfigurationForIndex = (
   for (const key in chartParams.data) {
     const data = chartParams.data[key as DataSource];
     const dataPoints = data!.dataPoints;
+    
     datasets.push({
     label: `${data?.label}: ${dataPoints[
       getCurrentSecond(currentFrame, chartParams.stepResolution)
     ]
       .toString()
-      .padStart(3, "0")}`,
+      .padStart(3, "0")}`,    
     data: dataPoints,
-    normalized: true,
-    borderColor: "rgb(225, 112, 0)",
-    tension: 0.2,
-    weight: 3,
-    clip: 100,
-    yAxisID: "yAxis",
-    borderJoinStyle: "bevel",
-    borderWidth: chartParams.lineWidth,
+    normalized: true,    
+    yAxisID: `yAxis${key}`,
+    ...datasetLine[key as DataSource]
     })
+    
   }
+
   return {
     type: "line",
+
     data: {
       labels: datasets[1].data,
       datasets: datasets
     },
     options: {
       layout: {
-        padding: chartParams.padding,
+        padding: {
+          bottom: chartParams.padding,
+          left: chartParams.padding,
+          right: chartParams.padding,
+          top: -40 + chartParams.padding
+        }
       },
       plugins: {
         legend: {
-          align: "end",
+          align: "end",          
           labels: {
+            boxPadding: 20,
             color: "white",
-            boxHeight: 0,
-            boxWidth: 0,
+            boxHeight: 120,
+            boxWidth: 0,            
             font: {
               size: chartParams.datasetLabelsize,
             },
@@ -96,13 +128,13 @@ const getConfigurationForIndex = (
             display: false,
           },
         },
-        yAxis: {
+        yAxisgarminFit: {
           grid: {
             display: false,
             drawBorder: false,
           },
           ticks: {
-            color: "white",
+            color: "rgb(225, 112, 0)",
             maxTicksLimit: 5,
             font: {
               weight: "bold",
@@ -110,6 +142,25 @@ const getConfigurationForIndex = (
             },
           },
         },
+        yAxisoxiwearCsv: {
+          position: "right",
+          type: "linear",
+          min: 60,
+          max: 100,
+          grid: {
+            display: false,
+            drawBorder: false,
+          },          
+          ticks: {
+            color: "rgb(0, 49, 225)",
+            maxTicksLimit: 4,
+            font: {
+              weight: "bold",
+              size: chartParams.axisLabelSize,
+            },
+          },
+        },
+
         yAxis2: {
           display: false,
           ticks: { display: false },

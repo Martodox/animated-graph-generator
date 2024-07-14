@@ -1,27 +1,10 @@
 import fs from "fs";
-
 import { parse } from "csv-parse/sync";
 import { getSecondsFromHourString } from "../time.js";
 import { KeyedDataset } from "../../types/dataparsers.js";
 import { SourcesConfig } from "../../types/config.js";
+import { fillZeroWithPrevNonNull } from "./utils.js";
 
-
-const fillZeroWithPrevNonNull = (set: KeyedDataset): KeyedDataset => {
-    const keys = Object.keys(set);
-
-    let prevNotNull = set[+keys[0]];
-    let prevNotNullIndex = 0;
-    while (prevNotNull === 0) {        
-        prevNotNull = set[+keys[prevNotNullIndex++]];
-    }
-
-    for (const key in set) {
-        prevNotNull = set[key] === 0 ? prevNotNull : set[key];
-        set[key] = prevNotNull
-    }
-
-    return set;
-}
 
 export const polarCsv = (config: SourcesConfig): KeyedDataset => {
 

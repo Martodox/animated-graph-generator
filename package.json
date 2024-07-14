@@ -20,6 +20,7 @@
     "chartjs-to-image": "^1.2.2",
     "cli-progress": "^3.12.0",
     "csv-parse": "^5.5.6",
+    "fit-file-parser": "^1.9.5",
     "percentile": "^1.6.0",
     "typescript": "^5.4.5"
   },

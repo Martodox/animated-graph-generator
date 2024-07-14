@@ -25,5 +25,9 @@
       "../../node_modules/@types",
       "../../@types"
     ],
-  }
+  },
+  "include": [
+    "src",
+    "src/types/ts-models/fit-file-parser.d.ts"
+  ]
 }

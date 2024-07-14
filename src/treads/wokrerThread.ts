@@ -50,7 +50,7 @@ export const workerThread = () => {
       baseWidth,
       sizeMultiplier,
       stepResolution: +seedData.stepResolution,
-      datasetLabelsize: 70,
+      datasetLabelsize: 60,
       axisLabelSize: 50,
       timeKnobSize: 20,
       padding: 40,
