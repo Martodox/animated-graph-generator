@@ -10,20 +10,24 @@ export interface DataSection {
     endTime: TimeString,
     timerStart: TimeString
     timerEnd: TimeString,
-    addEndingAudioSeconds?: number;
+    appendAudioSeconds?: number;
     prependAudioSeconds?: number;
     use: { [k in DataSource]?: SourceUse },
 }
 
-export type NormalisedDataSections = {
+export type DataSourceData = {
+    label: string,
+    dataPoints: number[]
+};
+
+export type NormalisedDataSection = {
     name: string;
     timerStartIndex: number,
     timerSeconds: number,
-    use: { [k in DataSource]?: {
-        label: string,
-        dataPoints: number[]
-    } },
-}[]
+    appendAudioSeconds?: number;
+    prependAudioSeconds?: number;
+    use: { [k in DataSource]?: DataSourceData },
+}
 
 export interface SourceUse {
     label?: string
@@ -48,9 +52,7 @@ export interface SeedData {
     chunk: number;
     chunks: number;
     fileName: string;
-    translated: string;
-    timerStartSecond: number;
-    timerStoptSecond: number;
+    section: string;
     stepResolution: number;
     devMode: boolean;
 }

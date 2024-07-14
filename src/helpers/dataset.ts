@@ -3,15 +3,15 @@ import fs from "fs";
 // import csv from "csvtojson";
 import { PolarMeta, PolarSession } from "../types/Polar.js";
 import { getSecondsFromHourString } from "./time.js";
-import { DataSection, DataSource, NormalisedDataSections } from "../types/config.js";
+import { DataSection, DataSource, NormalisedDataSection } from "../types/config.js";
 import { KeyedDataset } from "../types/dataparsers.js";
 
 
 
 
-export const prepareDataset = async (normalisedDataSets: { [k in DataSource]?: KeyedDataset }): Promise<NormalisedDataSections> => {
+export const prepareDataset = async (normalisedDataSets: { [k in DataSource]?: KeyedDataset }): Promise<NormalisedDataSection[]> => {
 
-  const normalisedDataSections: NormalisedDataSections = [];
+  const normalisedDataSections: NormalisedDataSection[] = [];
 
 
   config.sections.forEach(section => {
@@ -45,24 +45,12 @@ export const prepareDataset = async (normalisedDataSets: { [k in DataSource]?: K
       name: section.name,
       timerStartIndex,
       timerSeconds,
+      prependAudioSeconds: section.prependAudioSeconds,
+      appendAudioSeconds: section.appendAudioSeconds,
       use: slicedOutput
     })
 
   })
-
-  //   for (let i = 0; i < croppedSessions.length - 1; i++) {
-  //     const diff = +croppedSessions[i + 1] - +croppedSessions[i];
-  //     const increment = diff / config.stepResolution;
-
-  //     translated.push(+croppedSessions[i]);
-
-  //     for (let n = 1; n < config.stepResolution; n++) {
-  //       translated.push(+(+croppedSessions[i] + increment * n).toFixed(2));
-  //     }
-  //   }
-
-
-
 
   return normalisedDataSections;
 

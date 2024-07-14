@@ -1,7 +1,7 @@
 import fs from "fs";
 import { spawn } from 'child_process';
 
-export const audioBackground = (sessions: any[], fileName: string, addEndingAudioSeconds: number = 0, prependAudioSeconds: number = 0): Promise<void> => {
+export const audioBackground = (sessions: any[], fileName: string, appendAudioSeconds: number = 0, prependAudioSeconds: number = 0): Promise<void> => {
 
     return new Promise<void>(resolve => {
         const file = `./out/${fileName}.txt`;
@@ -12,7 +12,7 @@ export const audioBackground = (sessions: any[], fileName: string, addEndingAudi
             sessionsExtended.unshift(sessionsExtended[0])
         }
 
-        for (let i = 0; i < addEndingAudioSeconds; i++) {
+        for (let i = 0; i < appendAudioSeconds; i++) {
             sessionsExtended.push(sessionsExtended[sessionsExtended.length - 1])
         }
 

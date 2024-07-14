@@ -1,8 +1,9 @@
-import { ChartConfiguration } from "chart.js";
+import { ChartConfiguration, ChartDataset, ChartOptions } from "chart.js";
 import { ChartJSNodeCanvas } from "chartjs-node-canvas";
 import fs from "fs";
 import { getTimerFromSecondsElapsed } from "./helpers/time.js";
 import { ChartParams, GraphOptions } from "./types/graph.js";
+import { DataSource } from "./types/config.js";
 
 const calculateTimeDiff = () => {
   const start = Date.now();
@@ -17,39 +18,47 @@ const getConfigurationForIndex = (
   currentFrame: number,
   chartParams: ChartParams
 ): ChartConfiguration => {
+
+  const datasets: ChartDataset[] = [
+    {
+      normalized: true,
+      label: `Apnea: ${getTimer(
+        currentFrame,
+        chartParams.stepResolution,
+        chartParams.timerStartSecond,
+        chartParams.timerStoptSecond
+      )}`,
+      data: [],
+      yAxisID: "yAxis2",
+    }
+  ];
+
+
+  for (const key in chartParams.data) {
+    const data = chartParams.data[key as DataSource];
+    const dataPoints = data!.dataPoints;
+    datasets.push({
+    label: `${data?.label}: ${dataPoints[
+      getCurrentSecond(currentFrame, chartParams.stepResolution)
+    ]
+      .toString()
+      .padStart(3, "0")}`,
+    data: dataPoints,
+    normalized: true,
+    borderColor: "rgb(225, 112, 0)",
+    tension: 0.2,
+    weight: 3,
+    clip: 100,
+    yAxisID: "yAxis",
+    borderJoinStyle: "bevel",
+    borderWidth: chartParams.lineWidth,
+    })
+  }
   return {
     type: "line",
     data: {
-      labels: chartParams.label,
-      datasets: [
-        {
-          normalized: true,
-          label: `Apnea: ${getTimer(
-            currentFrame,
-            chartParams.stepResolution,
-            chartParams.timerStartSecond,
-            chartParams.timerStoptSecond
-          )}`,
-          data: [],
-          yAxisID: "yAxis2",
-        },
-        {
-          label: `HR: ${chartParams.data[
-            getCurrentSecond(currentFrame, chartParams.stepResolution)
-          ]
-            .toString()
-            .padStart(3, "0")}`,
-          data: chartParams.data,
-          normalized: true,
-          borderColor: "rgb(225, 112, 0)",
-          tension: 0.2,
-          weight: 3,
-          clip: 100,
-          yAxisID: "yAxis",
-          borderJoinStyle: "bevel",
-          borderWidth: chartParams.lineWidth,
-        },
-      ],
+      labels: datasets[1].data,
+      datasets: datasets
     },
     options: {
       layout: {
@@ -141,8 +150,8 @@ export const renderGraph = async (
 ) => {
   
   const chartParams: ChartParams = {
-    label: options.sessions,
-    data: options.sessions,
+    label: [],
+    data: options.section.use,
     stepResolution: options.stepResolution,
     width: options.baseWidth * options.sizeMultiplier,
     height: options.basedHeight * options.sizeMultiplier,
@@ -151,8 +160,8 @@ export const renderGraph = async (
     timeKnobSize: options.timeKnobSize * options.sizeMultiplier,
     padding: options.padding * options.sizeMultiplier,
     lineWidth: options.lineWidth * options.sizeMultiplier,
-    timerStartSecond: options.timerStartSecond,
-    timerStoptSecond: options.timerStoptSecond,
+    timerStartSecond: options.section.timerStartIndex,
+    timerStoptSecond: options.section.timerStartIndex + options.section.timerSeconds,
   };
 
   const chartJSNodeCanvas = new ChartJSNodeCanvas({
