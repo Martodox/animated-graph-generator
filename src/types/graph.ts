@@ -1,6 +1,6 @@
+import { DataSource, DataSourceData, NormalisedDataSection } from "./config.js";
+
 interface Params {
-    timerStartSecond: number,
-    timerStoptSecond: number,
     datasetLabelsize: number,
     axisLabelSize: number,
     timeKnobSize: number,
@@ -10,7 +10,7 @@ interface Params {
 }
 
 export interface GraphOptions extends Params {
-    sessions: number[],
+    section: NormalisedDataSection,
     baseWidth: number,
     basedHeight: number,
     sizeMultiplier: number,
@@ -24,9 +24,11 @@ export interface GraphOptions extends Params {
 
 export interface ChartParams extends Params {
     label: number[],
-    data: number[],
+    data: { [k in DataSource]?: DataSourceData },
     width: number,
     height: number,
+    timerStartSecond: number,
+    timerStoptSecond: number
 }
 
 export interface RenderCallback {

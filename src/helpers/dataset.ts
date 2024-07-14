@@ -1,93 +1,58 @@
 import config from "../config.js";
 import fs from "fs";
-import csv from "csvtojson";
+// import csv from "csvtojson";
 import { PolarMeta, PolarSession } from "../types/Polar.js";
 import { getSecondsFromHourString } from "./time.js";
-import { DataSection } from "../types/config.js";
-
-const findPrevNonNull = (data: number[], index: number) => {
-  
-  
-  if (!!data[index]) return data[index];
-  let iteratorIndex = index;
-  let val = data[iteratorIndex];
-
-  while (val === 0 && index > 0) {
-    val = data[--index]    
-  }
-
-  while (val === 0) {
-    val = data[++index]    
-  }
-  return val;
-  }
-
-export const prepareDataset = async ({
-  startTime,
-  endTime,
-  timerStart,
-  timerEnd,
-}: DataSection) => {
-  const input = fs.readFileSync(config.inputFile);
-  const individualLines = input.toString().split("\n");
-  const header = [individualLines.shift(), individualLines.shift()].join("\n");
-
-  const meta: PolarMeta[] = await csv().fromString(header);
-  
-  let session: number[] = (await csv().fromString(
-    individualLines.join("\n")
-  )).map((val) => +val["HR (bpm)"]);
-
-  session = session.map((_, index) => findPrevNonNull(session, index))
-  
+import { DataSection, DataSource, NormalisedDataSection } from "../types/config.js";
+import { KeyedDataset } from "../types/dataparsers.js";
 
 
-  const polarSessionStartFromMidnight = getSecondsFromHourString(
-    meta[0]["Start time"]
-  );
-  const videoRecordingStart = getSecondsFromHourString(
-    startTime,
-    config.offsetInSeconds
-  );
 
-  const videoRecordingStop = getSecondsFromHourString(
-    endTime,
-    config.offsetInSeconds
-  );
 
-  const runTimeInSeconds = (videoRecordingStop - videoRecordingStart) / 1000;
+export const prepareDataset = async (normalisedDataSets: { [k in DataSource]?: KeyedDataset }): Promise<NormalisedDataSection[]> => {
 
-  const secondsToRemove =
-    (videoRecordingStart - polarSessionStartFromMidnight) / 1000;
-  const croppedSessions = session.slice(
-    secondsToRemove,
-    -(session.length - runTimeInSeconds - secondsToRemove)
-  );
+  const normalisedDataSections: NormalisedDataSection[] = [];
 
-  let translated = [];
-  if (config.stepResolution > 1) {
-    for (let i = 0; i < croppedSessions.length - 1; i++) {
-      const diff = +croppedSessions[i + 1] - +croppedSessions[i];
-      const increment = diff / config.stepResolution;
+  config.sections.forEach(section => {
 
-      translated.push(+croppedSessions[i]);
+    const startTime = getSecondsFromHourString(section.startTime, config.secondsAligment);
+    const endTime = getSecondsFromHourString(section.endTime, config.secondsAligment);
 
-      for (let n = 1; n < config.stepResolution; n++) {
-        translated.push(+(+croppedSessions[i] + increment * n).toFixed(2));
+    const timerStart = getSecondsFromHourString(section.timerStart, config.secondsAligment);
+    const timerEnd = getSecondsFromHourString(section.timerEnd, config.secondsAligment);
+
+    const timerStartIndex = timerStart - startTime;
+    const timerSeconds = timerEnd - timerStart;
+    const graphSeconds = endTime - startTime;
+
+    const slicedOutput: any = {}
+    for (const k in section.use) {
+
+      if (!normalisedDataSets[k as DataSource]) {
+        throw Error(`${k} is not defined in sources`);
       }
-    }
-  } else {
-    translated = croppedSessions;
-  }
 
-  return {
-    raw: croppedSessions,
-    translated,
-    startTime: startTime,
-    timerStart: timerStart,
-    timerEnd: timerEnd,
-    offsetInSeconds: config.offsetInSeconds,
-    stepResolution: config.stepResolution,
-    devMode: config.devMode,
-  };
+      slicedOutput[k] = {
+        label: section.use[k as DataSource]?.label,
+        dataPoints: []
+      }
+      for (let i = startTime; i <= startTime + graphSeconds; i++) {
+        slicedOutput[k].dataPoints.push(normalisedDataSets[k as DataSource]![i]);
+      }
+    
+    }
+
+    normalisedDataSections.push({
+      name: section.name,
+      timerStartIndex,
+      timerSeconds,
+      prependAudioSeconds: section.prependAudioSeconds,
+      appendAudioSeconds: section.appendAudioSeconds,
+      use: slicedOutput
+    })
+
+  })
+
+  return normalisedDataSections;
+
 };

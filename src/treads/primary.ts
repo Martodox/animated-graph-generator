@@ -1,11 +1,10 @@
 import cluster from "cluster";
 import { prepareDataset } from "../helpers/dataset.js";
-import { getSecondsFromHourString } from "../helpers/time.js";
 import { audioBackground } from "../audioBackground.js";
 import fs from "fs";
 import os from "os";
 import cliProgress from "cli-progress";
-import { DataSection, SeedData } from "../types/config.js";
+import { DataSource, NormalisedDataSection, SeedData } from "../types/config.js";
 import config from "../config.js";
 import { RenderCallback } from "../types/graph.js";
 import {
@@ -14,125 +13,118 @@ import {
 } from '@basementuniverse/stats';
 
 import percentile from 'percentile';
+import { extractDataSets } from "../helpers/dataParsers/extractor.js";
 const numberOfCPUs = os.cpus().length;
 const renderTimes: number[] = [];
 
 type statKeys = "mean (ms)" | "median (ms)" | "p95 (ms)" | "p90 (ms)";
 
-const computeStats = (times: number[]): {[key in statKeys]: number|number[]} => {
+const computeStats = (times: number[]): { [key in statKeys]: number | number[] } => {
 
   return {
     "mean (ms)": Math.floor(mean(times)),
-    "median (ms)":  Math.floor(median(times)),
+    "median (ms)": Math.floor(median(times)),
     "p95 (ms)": percentile(95, times),
     "p90 (ms)": percentile(90, times),
   }
 
-  
+
 }
 
-export const processDataSection = async (section: DataSection): Promise<object> => {
+const processDataSection = async (section: NormalisedDataSection): Promise<object> => {
   return new Promise(async (resolve) => {
-    const {
-      raw,
-      translated,
-      devMode,
-      stepResolution,
-      timerStart,
-      offsetInSeconds,
-      timerEnd,
-      startTime,
-    } = await prepareDataset(section);
-  
+
+
+
+    const devMode = config.devMode;
+
+
     let fileName;
     if (devMode) {
       fileName = "chart";
-      try {
-        fs.rmSync(`./out/${fileName}`, { recursive: true, force: true });
-      } catch (errpr) {
-        console.log("rm dir error", errpr)
-      }
     } else {
       fileName = `chart - ${section.name}`;
     }
-  
-    const timerStartFromMidinght = getSecondsFromHourString(
-      timerStart,
-      offsetInSeconds
-    );
-    const timerStopFromMidinght = getSecondsFromHourString(
-      timerEnd,
-      offsetInSeconds
-    );
-    const videoRecordingStart = getSecondsFromHourString(
-      startTime,
-      offsetInSeconds
-    );
-  
-    const timerStartSecond =
-      (timerStartFromMidinght - videoRecordingStart) / 1000;
-    const timerRunInSeconds =
-      (timerStopFromMidinght - timerStartFromMidinght) / 1000;
-    const timerStoptSecond = timerStartSecond + timerRunInSeconds;
-  
-    try {
-      await audioBackground(raw, fileName, section.addEndingAudioSeconds);
-    } catch (error) {
-      console.log("Audio file not generated due to error", error)
-    } 
-    
-    
-  
+
+    if (section.use['polarCsv'] || section.use['garminFit']) {
+      const use = section.use['polarCsv'] ? section.use['polarCsv'] : section.use['garminFit'];
+      await audioBackground(use!.dataPoints, fileName, section.appendAudioSeconds, section.prependAudioSeconds);
+    }    
+
+    if (config.stepResolution > 1) {
+      for (const key in section.use) {
+
+        const data = section.use[key as DataSource]!.dataPoints;
+        const translated: number[] = []
+
+        for (let i = 0; i < data.length - 1; i++) {
+          const diff = +data[i + 1] - +data[i];
+          const increment = diff / config.stepResolution;
+
+          translated.push(+data[i]);
+
+          for (let n = 1; n < config.stepResolution; n++) {
+            translated.push(+(+data[i] + increment * n).toFixed(2));
+          }
+        }
+        section.use[key as DataSource]!.dataPoints = translated;
+      }
+    }
+    let dataPointsLength = 0;
+
+    for (const key in section.use) {
+      dataPointsLength = section.use[key as DataSource]!.dataPoints.length;
+    }
+
     if (config.textOnly) {
       console.log(
         "Only audio file rendered. Turn off textOnly to render the full chart!"
       );
       return;
     }
-  
+
     try {
       fs.mkdirSync(`./out/${fileName}`);
-    } catch {}
-  
+    } catch { }
+
     let res: number = 0;
-  
+
     const bar1 = new cliProgress.SingleBar(
       {
         format: `${fileName} | {bar} {percentage}% | {value}/{total} | ETA: {eta_formatted} | Elapsed {duration}s`,
         etaBuffer: 1000,
         etaAsynchronousUpdate: true,
       },
-      
+
       cliProgress.Presets.shades_classic
     );
-    bar1.start(translated.length, 0);
-  
-    for (let i = 0; i < numberOfCPUs; i++) {
-      let worker = cluster.fork({
-        chunk: i,
-        chunks: numberOfCPUs,
-        fileName,
-        translated: JSON.stringify(translated),
-        timerStartSecond,
-        timerStoptSecond,
-        stepResolution,
-        devMode,
-      } as SeedData);
-  
-      worker.on("message", ({msg}) => {
+      bar1.start(dataPointsLength, 0);
 
-        const parsedMsg = (JSON.parse(msg) as RenderCallback);
+      for (let i = 0; i < numberOfCPUs; i++) {
+        let worker = cluster.fork({
+          chunk: i,
+          chunks: numberOfCPUs,
+          fileName,
+          section: JSON.stringify(section),
+          stepResolution: config.stepResolution,
+          devMode,
+        } as SeedData);
 
-        renderTimes.push(parsedMsg.renderTime);
-        
-        bar1.increment();
-        res++;
-        if (res == translated.length) {          
-          bar1.stop();
-          resolve(computeStats(renderTimes));
-        }
-      });
-    }
+        worker.on("message", ({msg}) => {
+
+          const parsedMsg = (JSON.parse(msg) as RenderCallback);
+
+          renderTimes.push(parsedMsg.renderTime);
+
+          bar1.increment();
+          res++;
+          if (res == dataPointsLength) {          
+            bar1.stop();
+            resolve(computeStats(renderTimes));
+          }
+        });
+      }
+    
   })
 }
 
@@ -140,26 +132,34 @@ export const processDataSection = async (section: DataSection): Promise<object> 
 
 export const primaryThread = async () => {
 
-const stats: any[] = [];
+
+  const normalisedDataSets = await extractDataSets(config.sources);
   
-for (const section of config.sections) {  
-  stats.push(await processDataSection(section));
-}
+  const graphableDataSet = await prepareDataset(normalisedDataSets);
 
-const keys = Object.keys(stats[0]);
+  const stats: any[] = [];
 
-const oneLiners = keys.reduce<any>((acc, key) => {
 
-  const arr = stats.map(val => val[key])
-  const numbers = computeStats(arr);
-  return {
-    ...acc,
-    [key]: numbers[key as statKeys]
-  };
 
-}, {}) 
 
-console.table(oneLiners);
+  for (const section of graphableDataSet) {
+    stats.push(await processDataSection(section));
+  }
+
+  const keys = Object.keys(stats[0]);
+
+  const oneLiners = keys.reduce<any>((acc, key) => {
+
+    const arr = stats.map(val => val[key])
+    const numbers = computeStats(arr);
+    return {
+      ...acc,
+      [key]: numbers[key as statKeys]
+    };
+
+  }, {})
+
+  console.table(oneLiners);
 
   process.exit(0);
 

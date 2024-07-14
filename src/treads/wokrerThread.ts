@@ -1,5 +1,5 @@
 import { renderGraph } from "../graph.js";
-import { SeedData } from "../types/config.js";
+import { DataSource, NormalisedDataSection, SeedData } from "../types/config.js";
 import config from "../config.js";
 
 export const workerThread = () => {
@@ -7,7 +7,7 @@ export const workerThread = () => {
   const { basedHeight, baseWidth, sizeMultiplier } = config;
   const chunk = +seedData.chunk;
   const chunks = +seedData.chunks;
-  const translated = JSON.parse(seedData.translated);
+  const section = JSON.parse(seedData.section) as NormalisedDataSection;
 
   const send = (msg: any) => {
     process.send ? process.send({
@@ -16,21 +16,27 @@ export const workerThread = () => {
     }) : null;
   };
 
-  let perChunk = Math.ceil(translated.length / chunks);
+  let dataPointsLength = 0;
+
+  for (const key in section.use) {
+    dataPointsLength = section.use[key as DataSource]!.dataPoints.length;
+  }
+
+  let perChunk = Math.ceil(dataPointsLength / chunks);
   let startFrame = chunk * perChunk + chunk;
   let endFrame = perChunk * (chunk + 1) + chunk;
 
   if (chunk + 1 === chunks) {
-    perChunk = translated.length - perChunk * chunks + perChunk;
-    endFrame = translated.length - 1;
+    perChunk = dataPointsLength - perChunk * chunks + perChunk;
+    endFrame = dataPointsLength - 1;
   }
 
-  if (endFrame - perChunk > translated.length - 1) {
+  if (endFrame - perChunk > dataPointsLength - 1) {
     return;
   }
 
-  if (endFrame > translated.length - 1) {
-    endFrame = translated.length - 1;
+  if (endFrame > dataPointsLength - 1) {
+    endFrame = dataPointsLength - 1;
   }
 
   renderGraph(
@@ -39,14 +45,12 @@ export const workerThread = () => {
       devMode: seedData.devMode,
       startFrame,
       endFrame,
-      sessions: translated,
+      section,
       basedHeight,
       baseWidth,
       sizeMultiplier,
       stepResolution: +seedData.stepResolution,
-      timerStartSecond: +seedData.timerStartSecond,
-      timerStoptSecond: +seedData.timerStoptSecond,
-      datasetLabelsize: 70,
+      datasetLabelsize: 60,
       axisLabelSize: 50,
       timeKnobSize: 20,
       padding: 40,
