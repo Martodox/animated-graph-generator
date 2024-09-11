@@ -1,4 +1,4 @@
-import { ChartConfiguration, ChartDataset, ChartOptions } from "chart.js";
+import { ChartConfiguration, ChartDataset, ChartOptions, ChartTypeRegistry, LinearScaleOptions, ScaleOptionsByType } from "chart.js";
 import { ChartJSNodeCanvas } from "chartjs-node-canvas";
 import fs from "fs";
 import { getTimerFromSecondsElapsed } from "./helpers/time.js";
@@ -12,33 +12,90 @@ const calculateTimeDiff = () => {
     return diff;
   }
 }
+const colorBlue = "rgb(72, 116, 173)";
+const colorRed = "rgb(90, 0, 1)";
+const colorOrange = "rgb(221, 83, 3)";
 
 const datasetLine: {[key in DataSource]: any} = {
   "oxiwearCsv": {
-    borderColor: "rgb(0, 49, 225)",
+    borderColor: colorBlue,
     tension: 0.2,
     weight: 3,
     clip: 100,
     borderJoinStyle: "bevel",
     borderWidth: 6,
+    pointBackgroundColor: "#18263A",
   },
   "garminFit": {
-    borderColor: "rgb(225, 112, 0)",
+    borderColor: colorRed,
     tension: 0.2,
     weight: 3,
     clip: 100,
     borderJoinStyle: "bevel",
     borderWidth: 10,
+    pointBackgroundColor: "#290001",
   },
   "polarCsv": {
-    borderColor: "rgb(225, 112, 0)",
+    borderColor: colorOrange,
     tension: 0.2,
     weight: 3,
     clip: 100,
     borderJoinStyle: "bevel",
     borderWidth: 10,
+    pointBackgroundColor: "#501E01",
   }
 }
+
+const scalesConfig: {[key in DataSource]: any} = {
+  polarCsv: {
+    grid: {
+      display: false,
+      drawBorder: false,
+    },
+    ticks: {
+      color: colorOrange,
+      maxTicksLimit: 5,
+      font: {
+        weight: "bold",
+        size: 50,
+      },
+    },
+  },
+  garminFit: {
+    grid: {
+      display: false,
+      drawBorder: false,
+    },
+    ticks: {
+      color: colorRed,
+      maxTicksLimit: 5,
+      font: {
+        weight: "bold",
+        size: 50,
+      },
+    },
+  },
+  oxiwearCsv: {
+    position: "right",
+    type: "linear",
+    min: 60,
+    max: 100,
+    grid: {
+      display: false,
+      drawBorder: false,
+    },          
+    ticks: {
+      color: colorBlue,
+      maxTicksLimit: 4,
+      font: {
+        weight: "bold",
+        size: 50,
+      },
+    },
+  },
+}
+
+let scalesUsed = {}
 
 const getConfigurationForIndex = (
   currentFrame: number,
@@ -53,8 +110,8 @@ const getConfigurationForIndex = (
         chartParams.stepResolution,
         chartParams.timerStartSecond,
         chartParams.timerStoptSecond
-      )}`,
-
+      )}`,      
+      
       data: [],
       yAxisID: "yAxis2"
     }
@@ -64,18 +121,24 @@ const getConfigurationForIndex = (
   for (const key in chartParams.data) {
     const data = chartParams.data[key as DataSource];
     const dataPoints = data!.dataPoints;
-    
+    const scaleKey = `yAxis${key}`;
+
     datasets.push({
     label: `${data?.label}: ${dataPoints[
       getCurrentSecond(currentFrame, chartParams.stepResolution)
     ]
       .toString()
       .padStart(3, "0")}`,    
-    data: dataPoints,
+    data: dataPoints,    
     normalized: true,    
-    yAxisID: `yAxis${key}`,
+    yAxisID: scaleKey,
     ...datasetLine[key as DataSource]
     })
+    
+    scalesUsed = {
+      ...scalesUsed,
+      [scaleKey]: scalesConfig[key as DataSource]      
+    }
     
   }
 
@@ -112,12 +175,9 @@ const getConfigurationForIndex = (
       elements: {
         point: {
           pointStyle: "circle",
-          backgroundColor: "white",
-          borderColor: "white",
-          borderWidth: 0,          
           radius: (context) => {
             let index = context.dataIndex;
-            return index === currentFrame ? chartParams.timeKnobSize : 0;
+            return index === currentFrame ? 20 : 0;
           },
         },
       },
@@ -127,42 +187,11 @@ const getConfigurationForIndex = (
           grid: {
             display: false,
           },
-        },
-        yAxisgarminFit: {
-          grid: {
-            display: false,
-            drawBorder: false,
-          },
-          ticks: {
-            color: "rgb(225, 112, 0)",
-            maxTicksLimit: 5,
-            font: {
-              weight: "bold",
-              size: chartParams.axisLabelSize,
-            },
-          },
-        },
-        yAxisoxiwearCsv: {
-          position: "right",
-          type: "linear",
-          min: 60,
-          max: 100,
-          grid: {
-            display: false,
-            drawBorder: false,
-          },          
-          ticks: {
-            color: "rgb(0, 49, 225)",
-            maxTicksLimit: 4,
-            font: {
-              weight: "bold",
-              size: chartParams.axisLabelSize,
-            },
-          },
-        },
-
+        },        
+        ...scalesUsed,
         yAxis2: {
           display: false,
+
           ticks: { display: false },
         },
       },

@@ -18,6 +18,7 @@ export const prepareDataset = async (normalisedDataSets: { [k in DataSource]?: K
     const startTime = getSecondsFromHourString(section.startTime, config.secondsAligment);
     const endTime = getSecondsFromHourString(section.endTime, config.secondsAligment);
 
+
     const timerStart = getSecondsFromHourString(section.timerStart, config.secondsAligment);
     const timerEnd = getSecondsFromHourString(section.timerEnd, config.secondsAligment);
 
@@ -52,6 +53,7 @@ export const prepareDataset = async (normalisedDataSets: { [k in DataSource]?: K
     })
 
   })
+
 
   return normalisedDataSections;
 
