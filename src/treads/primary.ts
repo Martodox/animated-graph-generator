@@ -33,12 +33,9 @@ const computeStats = (times: number[]): { [key in statKeys]: number | number[] }
 
 const processDataSection = async (section: NormalisedDataSection): Promise<object> => {
   return new Promise(async (resolve) => {
-
-
-
+    
     const devMode = config.devMode;
-
-
+    
     let fileName;
     if (devMode) {
       fileName = "chart";

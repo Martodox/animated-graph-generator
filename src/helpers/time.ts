@@ -12,7 +12,7 @@ export const getSecondsFromHourString = (input: string, offsetInSeconds: number 
 } 
 
 
-
+export const subtractHourStrings = (cameraTime: string, deviceTime: string): number =>  getSecondsFromHourString(deviceTime) - getSecondsFromHourString(cameraTime)
 
 
 
