@@ -10,7 +10,8 @@ export const fillZeroWithPrevNonNull = (set: KeyedDataset): KeyedDataset => {
     }
 
     for (const key in set) {
-        prevNotNull = set[key] === 0 ? prevNotNull : set[key];
+        prevNotNull = !set[key] ? prevNotNull : set[key];
+
         set[key] = prevNotNull
     }
 

@@ -24,7 +24,7 @@ export const oxiwearCsv = (config: SourcesConfig): KeyedDataset => {
     const startTimestamp = parseOxiwearTimeToSeconds(data[0].reading_time) + dataSetAlignment;
     const endTimestamp = parseOxiwearTimeToSeconds(data[data.length - 1].reading_time) + dataSetAlignment;
 
-    let session: KeyedDataset = {}
+    let session: KeyedDataset = {} 
 
     for (let i = startTimestamp; i <= endTimestamp; i++) {
       session[i] = 0;

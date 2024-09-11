@@ -27,6 +27,7 @@ export const garminFit = async (config: SourcesConfig): Promise<KeyedDataset> =>
     });
   })
 
+
   const dataSetAlignment = (config.secondsAligment || 0) + (data.device_settings.time_offset)
 
   const startTimestamp = parseGarminTimeToSeconds(data.records[0].timestamp) + dataSetAlignment;
