@@ -40,7 +40,7 @@ export interface Config {
     sources: Sources,
     secondsAligment: number,
     stepResolution: number,
-    textOnly: boolean,
+    audioOnly: boolean,
     sections: DataSection[],
     devMode: boolean,
     basedHeight: number,

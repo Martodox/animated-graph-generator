@@ -14,7 +14,7 @@ const config: Config = {
   },
   secondsAligment: 27,
   stepResolution: 30,
-  textOnly: false,
+  audioOnly: false,
   sections: [
     {
       name: "section-1",

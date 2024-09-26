@@ -73,7 +73,7 @@ const processDataSection = async (section: NormalisedDataSection): Promise<objec
       dataPointsLength = section.use[key as DataSource]!.dataPoints.length;
     }
 
-    if (config.textOnly) {
+    if (config.audioOnly) {
       console.log(
         "Only audio file rendered. Turn off textOnly to render the full chart!"
       );
@@ -135,8 +135,6 @@ export const primaryThread = async () => {
   const graphableDataSet = await prepareDataset(normalisedDataSets);
 
   const stats: any[] = [];
-
-
 
 
   for (const section of graphableDataSet) {
