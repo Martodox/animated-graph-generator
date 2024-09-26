@@ -43,7 +43,7 @@ const processDataSection = async (section: NormalisedDataSection): Promise<objec
       fileName = `chart - ${section.name}`;
     }
 
-    if (section.use['polarCsv'] || section.use['garminFit']) {
+    if ((section.use['polarCsv'] || section.use['garminFit']) && !devMode) {
       const use = section.use['polarCsv'] ? section.use['polarCsv'] : section.use['garminFit'];
       await audioBackground(use!.dataPoints, fileName, section.appendAudioSeconds, section.prependAudioSeconds);
     }    
@@ -85,8 +85,9 @@ const processDataSection = async (section: NormalisedDataSection): Promise<objec
     } catch { }
 
     let res: number = 0;
-
-    const bar1 = new cliProgress.SingleBar(
+    let bar1: any;
+    if (!devMode) {
+      bar1 = new cliProgress.SingleBar(
       {
         format: `${fileName} | {bar} {percentage}% | {value}/{total} | ETA: {eta_formatted} | Elapsed {duration}s`,
         etaBuffer: 1000,
@@ -96,8 +97,10 @@ const processDataSection = async (section: NormalisedDataSection): Promise<objec
       cliProgress.Presets.shades_classic
     );
       bar1.start(dataPointsLength, 0);
+    }
+      const workerThreads = devMode ? 1 : numberOfCPUs;
 
-      for (let i = 0; i < numberOfCPUs; i++) {
+      for (let i = 0; i < workerThreads; i++) {
         let worker = cluster.fork({
           chunk: i,
           chunks: numberOfCPUs,
@@ -112,12 +115,18 @@ const processDataSection = async (section: NormalisedDataSection): Promise<objec
           const parsedMsg = (JSON.parse(msg) as RenderCallback);
 
           renderTimes.push(parsedMsg.renderTime);
-
-          bar1.increment();
+          if (!devMode) {
+            bar1.increment();
+          }
+          
           res++;
-          if (res == dataPointsLength) {          
-            bar1.stop();
-            resolve(computeStats(renderTimes));
+          if (res == dataPointsLength || devMode) {      
+            if (!devMode) {
+              bar1.stop();
+              resolve(computeStats(renderTimes));
+
+            }
+            
           }
         });
       }

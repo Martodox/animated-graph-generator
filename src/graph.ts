@@ -1,3 +1,4 @@
+//@ts-nocheck
 import { ChartConfiguration, ChartDataset, ChartOptions, ChartTypeRegistry, LinearScaleOptions, ScaleOptionsByType } from "chart.js";
 import { ChartJSNodeCanvas } from "chartjs-node-canvas";
 import fs from "fs";
@@ -129,6 +130,7 @@ const getConfigurationForIndex = (
     ]
       .toString()
       .padStart(3, "0")}`,    
+      
     data: dataPoints,    
     normalized: true,    
     yAxisID: scaleKey,
@@ -162,8 +164,18 @@ const getConfigurationForIndex = (
         legend: {
           align: "end",          
           labels: {
+            generateLabels: (chart) => {
+              if (chart.data.labels.length && chart.data.datasets.length) {
+                return chart.data.datasets.map((dataset) => {
+                  let color = scalesUsed[dataset.yAxisID] ? scalesUsed[dataset.yAxisID].ticks.color : "white";
+                  return {
+                    text: dataset.label,
+                    fontColor: color,                
+                  }
+                });
+              }
+            },
             boxPadding: 20,
-            color: "white",
             boxHeight: 120,
             boxWidth: 0,            
             font: {
@@ -191,7 +203,6 @@ const getConfigurationForIndex = (
         ...scalesUsed,
         yAxis2: {
           display: false,
-
           ticks: { display: false },
         },
       },
@@ -250,9 +261,11 @@ export const renderGraph = async (
     backgroundColour: "transparent",
   });
 
+  const endFrame = JSON.parse(options.devMode) ? 0 : options.endFrame;
+  
   for (
     let currentFrame = options.startFrame;
-    currentFrame <= options.endFrame;
+    currentFrame <= endFrame;
     currentFrame++
   ) {
     const configuration = getConfigurationForIndex(currentFrame, chartParams);
