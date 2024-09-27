@@ -1,5 +1,4 @@
-//@ts-nocheck
-import { ChartConfiguration, ChartDataset, ChartOptions, ChartTypeRegistry, LinearScaleOptions, ScaleOptionsByType } from "chart.js";
+import { ChartConfiguration, ChartDataset, ChartOptions, ChartTypeRegistry, LegendItem, LinearScaleOptions, ScaleOptionsByType } from "chart.js";
 import { ChartJSNodeCanvas } from "chartjs-node-canvas";
 import fs from "fs";
 import { getTimerFromSecondsElapsed } from "./helpers/time.js";
@@ -96,7 +95,7 @@ const scalesConfig: {[key in DataSource]: any} = {
   },
 }
 
-let scalesUsed = {}
+let scalesUsed: any = {}
 
 const getConfigurationForIndex = (
   currentFrame: number,
@@ -165,15 +164,18 @@ const getConfigurationForIndex = (
           align: "end",          
           labels: {
             generateLabels: (chart) => {
-              if (chart.data.labels.length && chart.data.datasets.length) {
+              if (chart?.data?.labels?.length && chart.data.datasets.length) {
                 return chart.data.datasets.map((dataset) => {
-                  let color = scalesUsed[dataset.yAxisID] ? scalesUsed[dataset.yAxisID].ticks.color : "white";
+                  const yAsis = (dataset as unknown as any).yAxisID as string;
+
+                  let color = scalesUsed[yAsis] ? scalesUsed[yAsis].ticks.color : "white";
                   return {
                     text: dataset.label,
                     fontColor: color,                
-                  }
+                  } as LegendItem
                 });
               }
+              return [];
             },
             boxPadding: 20,
             boxHeight: 120,
@@ -261,7 +263,7 @@ export const renderGraph = async (
     backgroundColour: "transparent",
   });
 
-  const endFrame = JSON.parse(options.devMode) ? 0 : options.endFrame;
+  const endFrame = JSON.parse(options.devMode as any) ? 0 : options.endFrame;
   
   for (
     let currentFrame = options.startFrame;
