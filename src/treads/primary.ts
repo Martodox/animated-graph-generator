@@ -36,12 +36,8 @@ const processDataSection = async (section: NormalisedDataSection): Promise<objec
     
     const devMode = config.devMode;
     
-    let fileName;
-    if (devMode) {
-      fileName = "chart";
-    } else {
-      fileName = `chart - ${section.name}`;
-    }
+    const fileName = `chart - ${section.name}`;
+
 
     if ((section.use['polarCsv'] || section.use['garminFit']) && !devMode) {
       const use = section.use['polarCsv'] ? section.use['polarCsv'] : section.use['garminFit'];
@@ -75,7 +71,7 @@ const processDataSection = async (section: NormalisedDataSection): Promise<objec
 
     if (config.audioOnly) {
       console.log(
-        "Only audio file rendered. Turn off textOnly to render the full chart!"
+        "Only audio file rendered. Turn off audioOnly to render the full chart!"
       );
       return;
     }
@@ -113,7 +109,6 @@ const processDataSection = async (section: NormalisedDataSection): Promise<objec
         worker.on("message", ({msg}) => {
 
           const parsedMsg = (JSON.parse(msg) as RenderCallback);
-
           renderTimes.push(parsedMsg.renderTime);
           if (!devMode) {
             bar1.increment();
@@ -122,10 +117,11 @@ const processDataSection = async (section: NormalisedDataSection): Promise<objec
           res++;
           if (res == dataPointsLength || devMode) {      
             if (!devMode) {
-              bar1.stop();
-              resolve(computeStats(renderTimes));
-
+              bar1.stop();              
+            } else {
+              console.log(`DevMode, rendered one frame of ${fileName}`)
             }
+            resolve(computeStats(renderTimes));
             
           }
         });

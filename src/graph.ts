@@ -12,13 +12,13 @@ const calculateTimeDiff = () => {
     return diff;
   }
 }
-const colorBlue = "rgb(72, 116, 173)";
-const colorRed = "rgb(90, 0, 1)";
-const colorOrange = "rgb(221, 83, 3)";
+const colorO2 = "rgb(38, 84, 124)";
+const colorGarmin = "rgb(253, 126, 53)";
+const colorPolar = "rgb(161, 60, 2)";
 
 const datasetLine: {[key in DataSource]: any} = {
   "oxiwearCsv": {
-    borderColor: colorBlue,
+    borderColor: colorO2,
     tension: 0.2,
     weight: 3,
     clip: 100,
@@ -27,7 +27,7 @@ const datasetLine: {[key in DataSource]: any} = {
     pointBackgroundColor: "#18263A",
   },
   "garminFit": {
-    borderColor: colorRed,
+    borderColor: colorGarmin,
     tension: 0.2,
     weight: 3,
     clip: 100,
@@ -36,7 +36,7 @@ const datasetLine: {[key in DataSource]: any} = {
     pointBackgroundColor: "#290001",
   },
   "polarCsv": {
-    borderColor: colorOrange,
+    borderColor: colorPolar,
     tension: 0.2,
     weight: 3,
     clip: 100,
@@ -53,7 +53,7 @@ const scalesConfig: {[key in DataSource]: any} = {
       drawBorder: false,
     },
     ticks: {
-      color: colorOrange,
+      color: colorPolar,
       maxTicksLimit: 5,
       font: {
         weight: "bold",
@@ -67,7 +67,7 @@ const scalesConfig: {[key in DataSource]: any} = {
       drawBorder: false,
     },
     ticks: {
-      color: colorRed,
+      color: colorGarmin,
       maxTicksLimit: 5,
       font: {
         weight: "bold",
@@ -85,7 +85,7 @@ const scalesConfig: {[key in DataSource]: any} = {
       drawBorder: false,
     },          
     ticks: {
-      color: colorBlue,
+      color: colorO2,
       maxTicksLimit: 4,
       font: {
         weight: "bold",
@@ -263,8 +263,10 @@ export const renderGraph = async (
     backgroundColour: "transparent",
   });
 
-  const endFrame = JSON.parse(options.devMode as any) ? 0 : options.endFrame;
-  
+  const isDevMode = JSON.parse(options.devMode as any);
+
+  const endFrame = isDevMode ? 0 : options.endFrame;
+
   for (
     let currentFrame = options.startFrame;
     currentFrame <= endFrame;
