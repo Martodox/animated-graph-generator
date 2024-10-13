@@ -19,7 +19,6 @@ const colorPolar = "rgb(161, 60, 2)";
 const datasetLine: {[key in DataSource]: any} = {
   "oxiwearCsv": {
     borderColor: colorO2,
-    tension: 0.2,
     weight: 3,
     clip: 100,
     borderJoinStyle: "bevel",
@@ -28,7 +27,6 @@ const datasetLine: {[key in DataSource]: any} = {
   },
   "garminFit": {
     borderColor: colorGarmin,
-    tension: 0.2,
     weight: 3,
     clip: 100,
     borderJoinStyle: "bevel",
@@ -37,7 +35,6 @@ const datasetLine: {[key in DataSource]: any} = {
   },
   "polarCsv": {
     borderColor: colorPolar,
-    tension: 0.2,
     weight: 3,
     clip: 100,
     borderJoinStyle: "bevel",
@@ -57,7 +54,7 @@ const scalesConfig: {[key in DataSource]: any} = {
       maxTicksLimit: 5,
       font: {
         weight: "bold",
-        size: 50,
+        size: 70,
       },
     },
   },
@@ -246,8 +243,8 @@ export const renderGraph = async (
     label: [],
     data: options.section.use,
     stepResolution: options.stepResolution,
-    width: options.baseWidth * options.sizeMultiplier,
-    height: options.basedHeight * options.sizeMultiplier,
+    width: options.baseWidth,
+    height: options.basedHeight,
     datasetLabelsize: options.datasetLabelsize * options.sizeMultiplier,
     axisLabelSize: options.axisLabelSize * options.sizeMultiplier,
     timeKnobSize: options.timeKnobSize * options.sizeMultiplier,
