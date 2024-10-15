@@ -1,6 +1,7 @@
 import { Config } from "./types/config.js";
 
 const config: Config = {
+  destinationDirectory: "",
   sources: {
     polarCsv: {
       src: "./in/Karolina.CSV",

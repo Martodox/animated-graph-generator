@@ -1,11 +1,10 @@
 import fs from "fs";
 import { spawn } from 'child_process';
-
+import config from "./config.js";
 export const audioBackground = (sessions: any[], fileName: string, appendAudioSeconds: number = 0, prependAudioSeconds: number = 0): Promise<void> => {
 
     return new Promise<void>(resolve => {
-        const file = `./out/${fileName}.txt`;
-        
+        const file = `${config.destinationDirectory}/${fileName}.txt`;
         const sessionsExtended = [...sessions];
 
         for (let i = 0; i < prependAudioSeconds; i++) {

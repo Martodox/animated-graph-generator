@@ -4,6 +4,7 @@ import fs from "fs";
 import { getTimerFromSecondsElapsed } from "./helpers/time.js";
 import { ChartParams, GraphOptions } from "./types/graph.js";
 import { DataSource } from "./types/config.js";
+import config from "./config.js";
 
 const calculateTimeDiff = () => {
   const start = Date.now();
@@ -12,7 +13,7 @@ const calculateTimeDiff = () => {
     return diff;
   }
 }
-const colorO2 = "rgb(38, 84, 124)";
+const colorO2 = "rgb(99, 157, 207)";
 const colorGarmin = "rgb(253, 126, 53)";
 const colorPolar = "rgb(161, 60, 2)";
 
@@ -26,6 +27,14 @@ const datasetLine: {[key in DataSource]: any} = {
     pointBackgroundColor: "#18263A",
   },
   "garminFit": {
+    borderColor: colorGarmin,
+    weight: 3,
+    clip: 100,
+    borderJoinStyle: "bevel",
+    borderWidth: 10,
+    pointBackgroundColor: "#290001",
+  },
+  "oxiwearHRCsv": {
     borderColor: colorGarmin,
     weight: 3,
     clip: 100,
@@ -72,10 +81,24 @@ const scalesConfig: {[key in DataSource]: any} = {
       },
     },
   },
+  oxiwearHRCsv: {
+    grid: {
+      display: false,
+      drawBorder: false,
+    },
+    ticks: {
+      color: colorGarmin,
+      maxTicksLimit: 5,
+      font: {
+        weight: "bold",
+        size: 50,
+      },
+    },
+  },
   oxiwearCsv: {
     position: "right",
     type: "linear",
-    min: 60,
+    min: 50,
     max: 100,
     grid: {
       display: false,
@@ -133,6 +156,11 @@ const getConfigurationForIndex = (
     ...datasetLine[key as DataSource]
     })
     
+    if (key === "oxiwearCsv") {
+      const min = Math.min(...dataPoints);
+      scalesConfig[key as DataSource].min = min;      
+    }
+
     scalesUsed = {
       ...scalesUsed,
       [scaleKey]: scalesConfig[key as DataSource]      
@@ -281,7 +309,7 @@ export const renderGraph = async (
     }));
     
     fs.writeFile(
-      `./out/${options.fileName}/${options.fileName}Loop${(currentFrame + 1)
+      `${config.destinationDirectory}/${options.fileName}/${options.fileName}Loop${(currentFrame + 1)
         .toString()
         .padStart(5, "0")}.png`,
       buffer,

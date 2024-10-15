@@ -2,7 +2,7 @@ import { KeyedDataset } from "./dataparsers.js";
 
 export type TimeString = string;
 
-export type DataSource = "polarCsv" | "garminFit" | "oxiwearCsv";
+export type DataSource = "polarCsv" | "garminFit" | "oxiwearCsv" | "oxiwearHRCsv";
 
 export interface DataSection {
     name: string,
@@ -37,6 +37,7 @@ export type Sources = { [k in DataSource]?: SourcesConfig };
 export type SourcesConfig = { src: string, secondsAligment?: number };
 
 export interface Config {
+    destinationDirectory: string;
     sources: Sources,
     secondsAligment: number,
     stepResolution: number,

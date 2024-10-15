@@ -34,6 +34,10 @@ const computeStats = (times: number[]): { [key in statKeys]: number | number[] }
 const processDataSection = async (section: NormalisedDataSection): Promise<object> => {
   return new Promise(async (resolve) => {
     
+    if (config.destinationDirectory.length === 0) {
+      throw Error("config.destinationDirectory can't be empty")
+    }
+
     const devMode = config.devMode;
     
     const fileName = `chart - ${section.name}`;
@@ -76,13 +80,20 @@ const processDataSection = async (section: NormalisedDataSection): Promise<objec
       return;
     }
 
-    try {
-      fs.mkdirSync(`./out/${fileName}`);
-    } catch { }
+    fs.mkdirSync(`${config.destinationDirectory}/${fileName}`, {
+      recursive: true
+    });
 
     let res: number = 0;
     let bar1: any;
     if (!devMode) {
+
+      fs.writeFile(
+        `${config.destinationDirectory}/${fileName}.json`,
+        JSON.stringify(config),
+        () => {}
+      );
+
       bar1 = new cliProgress.SingleBar(
       {
         format: `${fileName} | {bar} {percentage}% | {value}/{total} | ETA: {eta_formatted} | Elapsed {duration}s`,

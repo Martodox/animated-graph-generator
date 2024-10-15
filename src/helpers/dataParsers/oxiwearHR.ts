@@ -10,7 +10,7 @@ import { fillZeroWithPrevNonNull } from "./utils.js";
 
 
 
-export const oxiwearCsv = (config: SourcesConfig): KeyedDataset => {
+export const oxiwearHRCsv = (config: SourcesConfig): KeyedDataset => {
 
     const input = fs.readFileSync(config.src).toString();
 
@@ -31,7 +31,7 @@ export const oxiwearCsv = (config: SourcesConfig): KeyedDataset => {
     }
   
     data.forEach((val) => {
-      session[parseOxiwearTimeToSeconds(val.reading_time) + dataSetAlignment] = +val.spo2;
+      session[parseOxiwearTimeToSeconds(val.reading_time) + dataSetAlignment] = +val.pulse_rate;
     })
   
     return fillZeroWithPrevNonNull(session)

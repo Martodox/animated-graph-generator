@@ -1,7 +1,7 @@
 export interface OxiwearDataPoint {
 	reading_time: string;
 	spo2: string;
-	heart_rate: string;
+	pulse_rate: string;
 	altitude: string;
 	humidity: string;
 	air_quality: string;

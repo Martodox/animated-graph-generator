@@ -2,6 +2,7 @@ import { DataSource, Sources, SourcesConfig } from "../../types/config.js";
 import { KeyedDataset } from "../../types/dataparsers.js";
 import { garminFit } from "./garminFit.js";
 import { oxiwearCsv } from "./oxiwear.js";
+import { oxiwearHRCsv } from "./oxiwearHR.js";
 import { polarCsv } from "./polar.js";
 
 
@@ -12,7 +13,8 @@ export const extractDataSets = async (sources: Sources): Promise<{[k in DataSour
     const parserMap: sourceType = {
         "garminFit": garminFit,
         "oxiwearCsv": oxiwearCsv,
-        "polarCsv": polarCsv   
+        "polarCsv": polarCsv,
+        "oxiwearHRCsv": oxiwearHRCsv   
     }
 
     const datasets: { [key in DataSource]?: KeyedDataset } = {};
