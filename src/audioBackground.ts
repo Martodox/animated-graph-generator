@@ -21,14 +21,13 @@ export const audioBackground = (
 
     fs.writeFileSync(file, sessionsExtended.join(","));
 
-    console.log("\n");
     const ls = spawn("./hr-sound-generator/bin/hr-sound-generator", [
       fileName,
       config.destinationDirectory,
     ]);
 
     ls.stdout.on("data", (data) => {
-      console.log(`${data}`);
+      // console.log(`${data}`);
     });
 
     ls.stderr.on("data", (data) => {

@@ -16,19 +16,12 @@
     "noImplicitAny": true,
     "sourceMap": true,
     // "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "noUnusedParameters": false,
     "forceConsistentCasingInFileNames": true,
     "experimentalDecorators": true,
     "resolveJsonModule": true,
     "allowJs": false,
-    "typeRoots": [
-      "./types",
-      "../../node_modules/@types",
-      "../../@types"
-    ],
+    "typeRoots": ["./types", "../../node_modules/@types", "../../@types"]
   },
-  "include": [
-    "src",
-    "src/types/ts-models/fit-file-parser.d.ts"
-  ]
+  "include": ["src", "src/types/ts-models/fit-file-parser.d.ts"]
 }

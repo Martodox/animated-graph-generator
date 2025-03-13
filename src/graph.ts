@@ -1,4 +1,4 @@
-import { ChartConfiguration, ChartDataset, ChartOptions, ChartTypeRegistry, LegendItem, LinearScaleOptions, ScaleOptionsByType } from "chart.js";
+import { ChartConfiguration, ChartDataset, LegendItem } from "chart.js";
 import { ChartJSNodeCanvas } from "chartjs-node-canvas";
 import fs from "fs";
 import { getTimerFromSecondsElapsed } from "./helpers/time.js";
@@ -9,16 +9,16 @@ import config from "./config.js";
 const calculateTimeDiff = () => {
   const start = Date.now();
   return () => {
-    const diff = Date.now() - start;;
+    const diff = Date.now() - start;
     return diff;
-  }
-}
+  };
+};
 const colorO2 = "rgb(99, 157, 207)";
 const colorGarmin = "rgb(253, 126, 53)";
 const colorPolar = "rgb(161, 60, 2)";
 
-const datasetLine: {[key in DataSource]: any} = {
-  "oxiwearCsv": {
+const datasetLine: { [key in DataSource]: any } = {
+  oxiwearCsv: {
     borderColor: colorO2,
     weight: 3,
     clip: 100,
@@ -26,7 +26,7 @@ const datasetLine: {[key in DataSource]: any} = {
     borderWidth: 6,
     pointBackgroundColor: "#18263A",
   },
-  "garminFit": {
+  garminFit: {
     borderColor: colorGarmin,
     weight: 3,
     clip: 100,
@@ -34,7 +34,7 @@ const datasetLine: {[key in DataSource]: any} = {
     borderWidth: 10,
     pointBackgroundColor: "#290001",
   },
-  "oxiwearHRCsv": {
+  oxiwearHRCsv: {
     borderColor: colorGarmin,
     weight: 3,
     clip: 100,
@@ -42,17 +42,17 @@ const datasetLine: {[key in DataSource]: any} = {
     borderWidth: 10,
     pointBackgroundColor: "#290001",
   },
-  "polarCsv": {
+  polarCsv: {
     borderColor: colorPolar,
     weight: 3,
     clip: 100,
     borderJoinStyle: "bevel",
     borderWidth: 10,
     pointBackgroundColor: "#501E01",
-  }
-}
+  },
+};
 
-const scalesConfig: {[key in DataSource]: any} = {
+const scalesConfig: { [key in DataSource]: any } = {
   polarCsv: {
     grid: {
       display: false,
@@ -103,7 +103,7 @@ const scalesConfig: {[key in DataSource]: any} = {
     grid: {
       display: false,
       drawBorder: false,
-    },          
+    },
     ticks: {
       color: colorO2,
       maxTicksLimit: 4,
@@ -113,15 +113,14 @@ const scalesConfig: {[key in DataSource]: any} = {
       },
     },
   },
-}
+};
 
-let scalesUsed: any = {}
+let scalesUsed: any = {};
 
 const getConfigurationForIndex = (
   currentFrame: number,
   chartParams: ChartParams
 ): ChartConfiguration => {
-
   const datasets: ChartDataset[] = [
     {
       normalized: true,
@@ -130,13 +129,12 @@ const getConfigurationForIndex = (
         chartParams.stepResolution,
         chartParams.timerStartSecond,
         chartParams.timerStoptSecond
-      )}`,      
-      
-      data: [],
-      yAxisID: "yAxis2"
-    }
-  ];
+      )}`,
 
+      data: [],
+      yAxisID: "yAxis2",
+    },
+  ];
 
   for (const key in chartParams.data) {
     const data = chartParams.data[key as DataSource];
@@ -144,28 +142,27 @@ const getConfigurationForIndex = (
     const scaleKey = `yAxis${key}`;
 
     datasets.push({
-    label: `${data?.label}: ${dataPoints[
-      getCurrentSecond(currentFrame, chartParams.stepResolution)
-    ]
-      .toString()
-      .padStart(3, "0")}`,    
-      
-    data: dataPoints,    
-    normalized: true,    
-    yAxisID: scaleKey,
-    ...datasetLine[key as DataSource]
-    })
-    
+      label: `${data?.label}: ${dataPoints[
+        getCurrentSecond(currentFrame, chartParams.stepResolution)
+      ]
+        .toString()
+        .padStart(3, "0")}`,
+
+      data: dataPoints,
+      normalized: true,
+      yAxisID: scaleKey,
+      ...datasetLine[key as DataSource],
+    });
+
     if (key === "oxiwearCsv") {
       const min = Math.min(...dataPoints);
-      scalesConfig[key as DataSource].min = min;      
+      scalesConfig[key as DataSource].min = min;
     }
 
     scalesUsed = {
       ...scalesUsed,
-      [scaleKey]: scalesConfig[key as DataSource]      
-    }
-    
+      [scaleKey]: scalesConfig[key as DataSource],
+    };
   }
 
   return {
@@ -173,7 +170,7 @@ const getConfigurationForIndex = (
 
     data: {
       labels: datasets[1].data,
-      datasets: datasets
+      datasets: datasets,
     },
     options: {
       layout: {
@@ -181,30 +178,32 @@ const getConfigurationForIndex = (
           bottom: chartParams.padding,
           left: chartParams.padding,
           right: chartParams.padding,
-          top: -40 + chartParams.padding
-        }
+          top: -40 + chartParams.padding,
+        },
       },
       plugins: {
         legend: {
-          align: "end",          
+          align: "end",
           labels: {
             generateLabels: (chart) => {
               if (chart?.data?.labels?.length && chart.data.datasets.length) {
                 return chart.data.datasets.map((dataset) => {
                   const yAsis = (dataset as unknown as any).yAxisID as string;
 
-                  let color = scalesUsed[yAsis] ? scalesUsed[yAsis].ticks.color : "white";
+                  let color = scalesUsed[yAsis]
+                    ? scalesUsed[yAsis].ticks.color
+                    : "white";
                   return {
                     text: dataset.label,
-                    fontColor: color,                
-                  } as LegendItem
+                    fontColor: color,
+                  } as LegendItem;
                 });
               }
               return [];
             },
             boxPadding: 20,
             boxHeight: 120,
-            boxWidth: 0,            
+            boxWidth: 0,
             font: {
               size: chartParams.datasetLabelsize,
             },
@@ -226,7 +225,7 @@ const getConfigurationForIndex = (
           grid: {
             display: false,
           },
-        },        
+        },
         ...scalesUsed,
         yAxis2: {
           display: false,
@@ -266,7 +265,6 @@ export const renderGraph = async (
   options: GraphOptions,
   cb: (msg: any) => void
 ) => {
-  
   const chartParams: ChartParams = {
     label: [],
     data: options.section.use,
@@ -279,7 +277,8 @@ export const renderGraph = async (
     padding: options.padding * options.sizeMultiplier,
     lineWidth: options.lineWidth * options.sizeMultiplier,
     timerStartSecond: options.section.timerStartIndex,
-    timerStoptSecond: options.section.timerStartIndex + options.section.timerSeconds,
+    timerStoptSecond:
+      options.section.timerStartIndex + options.section.timerSeconds,
   };
 
   const chartJSNodeCanvas = new ChartJSNodeCanvas({
@@ -302,14 +301,18 @@ export const renderGraph = async (
     const bufferSyncTime = calculateTimeDiff();
     const buffer = chartJSNodeCanvas.renderToBufferSync(configuration);
     const renderTime = bufferSyncTime();
-    
-    cb(JSON.stringify({
-      currentFrame,
-      renderTime,
-    }));
-    
+
+    cb(
+      JSON.stringify({
+        currentFrame,
+        renderTime,
+      })
+    );
+
     fs.writeFile(
-      `${config.destinationDirectory}/${options.fileName}/${options.fileName}Loop${(currentFrame + 1)
+      `${config.destinationDirectory}/${options.fileName}/img-${(
+        currentFrame + 1
+      )
         .toString()
         .padStart(5, "0")}.png`,
       buffer,

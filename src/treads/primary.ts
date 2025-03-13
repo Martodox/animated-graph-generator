@@ -15,6 +15,8 @@ import { mean, median } from "@basementuniverse/stats";
 
 import percentile from "percentile";
 import { extractDataSets } from "../helpers/dataParsers/extractor.js";
+import { scheduleMovieRender } from "../movieGenerator.js";
+import { createBar, getBar } from "../barProgress.js";
 const numberOfCPUs = os.cpus().length;
 const renderTimes: number[] = [];
 
@@ -33,7 +35,7 @@ const computeStats = (
 
 const processDataSection = async (
   section: NormalisedDataSection
-): Promise<object> => {
+): Promise<any> => {
   return new Promise(async (resolve) => {
     if (config.destinationDirectory.length === 0) {
       throw Error("config.destinationDirectory can't be empty");
@@ -41,7 +43,7 @@ const processDataSection = async (
 
     const devMode = config.devMode;
 
-    const fileName = `chart - ${section.name}`;
+    const fileName = `${section.name}`;
 
     if ((section.use["polarCsv"] || section.use["garminFit"]) && !devMode) {
       const use = section.use["polarCsv"]
@@ -83,96 +85,95 @@ const processDataSection = async (
       console.log(
         "Only audio file rendered. Turn off audioOnly to render the full chart!"
       );
-      return;
-    }
+      resolve(renderTimes);
+    } else {
+      fs.mkdirSync(`${config.destinationDirectory}/${fileName}`, {
+        recursive: true,
+      });
 
-    fs.mkdirSync(`${config.destinationDirectory}/${fileName}`, {
-      recursive: true,
-    });
+      let res: number = 0;
+      let bar1: any;
 
-    let res: number = 0;
-    let bar1: any;
+      // console.log(
+      //   `Timer for ${fileName}: ${Math.floor(
+      //     (section.timerSeconds + 1) / 60
+      //   )}:${(section.timerSeconds + 1) % 60}`
+      // );
 
-    console.log(
-      `Timer for ${fileName}: ${Math.floor((section.timerSeconds + 1) / 60)}:${
-        (section.timerSeconds + 1) % 60
-      }`
-    );
-
-    if (!devMode) {
       fs.writeFile(
         `${config.destinationDirectory}/${fileName}.json`,
         JSON.stringify(config),
         () => {}
       );
 
-      bar1 = new cliProgress.SingleBar(
-        {
-          format: `${fileName} | {bar} {percentage}% | {value}/{total} | ETA: {eta_formatted} | Elapsed {duration}s`,
-          etaBuffer: 1000,
-          etaAsynchronousUpdate: true,
-        },
+      bar1 = getBar(fileName);
+      bar1.setTotal(devMode ? 1 : dataPointsLength);
 
-        cliProgress.Presets.shades_classic
-      );
-      bar1.start(dataPointsLength, 0);
-    }
-    const workerThreads = devMode ? 1 : numberOfCPUs;
+      const workerThreads = devMode ? 1 : numberOfCPUs;
 
-    for (let i = 0; i < workerThreads; i++) {
-      let worker = cluster.fork({
-        chunk: i,
-        chunks: numberOfCPUs,
-        fileName,
-        section: JSON.stringify(section),
-        stepResolution: config.stepResolution,
-        devMode,
-      } as SeedData);
+      for (let i = 0; i < workerThreads; i++) {
+        let worker = cluster.fork({
+          chunk: i,
+          chunks: numberOfCPUs,
+          fileName,
+          section: JSON.stringify(section),
+          stepResolution: config.stepResolution,
+          devMode,
+        } as SeedData);
 
-      worker.on("message", ({ msg }) => {
-        const parsedMsg = JSON.parse(msg) as RenderCallback;
-        renderTimes.push(parsedMsg.renderTime);
-        if (!devMode) {
+        worker.on("message", async ({ msg }) => {
+          const parsedMsg = JSON.parse(msg) as RenderCallback;
+          renderTimes.push(parsedMsg.renderTime);
           bar1.increment();
-        }
 
-        res++;
-        if (res == dataPointsLength || devMode) {
-          if (!devMode) {
-            bar1.stop();
-          } else {
-            console.log(`DevMode, rendered one frame of ${fileName}`);
+          res++;
+          if (res == dataPointsLength || devMode) {
+            resolve({
+              stats: computeStats(renderTimes),
+              videoRenderParams: {
+                inputDirectory: `${config.destinationDirectory}/${fileName}`,
+                fileName: fileName,
+                destinationDirectory: config.destinationDirectory,
+                numberOfFrames: dataPointsLength,
+              },
+            });
           }
-          resolve(computeStats(renderTimes));
-        }
-      });
+        });
+      }
     }
   });
 };
 
 export const primaryThread = async () => {
+  let jobsCompleted: number = 0;
+
   const normalisedDataSets = await extractDataSets(config.sources);
 
   const graphableDataSet = await prepareDataset(normalisedDataSets);
 
-  const stats: any[] = [];
-
+  const jobsToBeCompleted = config.devMode
+    ? graphableDataSet.length
+    : graphableDataSet.length * 2;
   for (const section of graphableDataSet) {
-    stats.push(await processDataSection(section));
+    createBar(section.name);
+    if (!config.devMode) {
+      createBar(`${section.name} - Movie`);
+    }
   }
 
-  const keys = Object.keys(stats[0]);
+  for (const section of graphableDataSet) {
+    const completed = await processDataSection(section);
+    jobsCompleted++;
+    if (!config.devMode) {
+      scheduleMovieRender(completed.videoRenderParams, () => {
+        jobsCompleted++;
+      });
+    }
+  }
 
-  const oneLiners = keys.reduce<any>((acc, key) => {
-    const arr = stats.map((val) => val[key]);
-    const numbers = computeStats(arr);
-    return {
-      ...acc,
-      [key]: numbers[key as statKeys],
-    };
-  }, {});
-
-  console.table(oneLiners);
-
-  process.exit(0);
+  setInterval(() => {
+    if (jobsCompleted === jobsToBeCompleted) {
+      process.exit(0);
+    }
+  }, 100);
 };
