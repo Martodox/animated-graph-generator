@@ -1,38 +1,36 @@
+import { subtractHourStrings } from "./helpers/time.js";
 import { Config } from "./types/config.js";
 
 const config: Config = {
-  destinationDirectory: "",
+  destinationDirectory: "/input/graphs/dist",
   sources: {
     polarCsv: {
-      src: "./in/Karolina.CSV",
-    }
-    // garminFit: {
-    //   src: "./in/15411374432_ACTIVITY.fit",
-    // }
-    // oxiwearCsv: {
-    //   src: "./in/export-2024-05-17_15_00_00-19_00_00_805c50c9-a7bf-4813-adf4-5a0543951542.csv",
-    // }
+      src: "/input/graphs/polar.CSV",
+    },
   },
-  secondsAligment: 27,
-  stepResolution: 30,
+  secondsAligment: subtractHourStrings({
+    cameraTime: "14:24:56",
+    deviceTime: "14:23:33",
+  }),
+  stepResolution: 25,
   audioOnly: false,
   sections: [
     {
-      name: "section-1",
-      startTime: "07:05:49",
-      timerStart: "07:06:12",
-      timerEnd: "07:09:11",
-      endTime: "07:09:30",
+      name: "dyn-1",
+      startTime: "14:41:10",
+      timerStart: "14:41:29",
+      timerEnd: "14:44:09",
+      endTime: "14:44:30",
       use: {
-        polarCsv: { 
-          label: "elo",
-        }
-      }
-    }
+        polarCsv: {
+          label: "HR",
+        },
+      },
+    },
   ],
   devMode: false,
-  basedHeight: 1080,
-  baseWidth: 1920,
+  basedHeight: 1512,
+  baseWidth: 2688,
   sizeMultiplier: 1,
 };
 
