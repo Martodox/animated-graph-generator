@@ -34,17 +34,18 @@ export const prepareDataset = async (normalisedDataSets: {
 
     const slicedOutput: any = {};
     for (const k in section.use) {
-      if (!normalisedDataSets[k as DataSource]) {
-        throw Error(`${k} is not defined in sources`);
+      const dataSourceKey = k as DataSource;
+            if (!normalisedDataSets[dataSourceKey]) {
+        throw Error(`${dataSourceKey} is not defined in sources`);
       }
-
-      slicedOutput[k] = {
-        label: section.use[k as DataSource]?.label,
+      
+      slicedOutput[dataSourceKey] = {
+        label: (section.use as Record<string, any>)[dataSourceKey]?.label,
         dataPoints: [],
       };
       for (let i = startTime; i <= startTime + graphSeconds; i++) {
-        slicedOutput[k].dataPoints.push(
-          normalisedDataSets[k as DataSource]![i]
+        slicedOutput[dataSourceKey].dataPoints.push((
+          normalisedDataSets as Record<string, any>)[dataSourceKey][i]
         );
       }
     }
