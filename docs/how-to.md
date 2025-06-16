@@ -58,3 +58,5 @@ You should see an animation in the terminal showing you progress.
 The overlay video sections should be merged on top of the recorded video or clips of the video. The overlay video should be positioned to start at the `startTime` time stamp you provided to the script in the config file.
 
 ## Work In Progress
+
+- If you get a type error see [here](https://github.com/Martodox/animated-graph-generator/pull/6).
