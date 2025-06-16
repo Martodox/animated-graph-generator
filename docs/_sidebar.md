@@ -1,5 +1,7 @@
 * [Home](/)
-  * [Config](/?id=config)
 * [Create your own video](how-to.md)
   * [Hardware requirements](/how-to?id=hardware-requirements)
+  * [Preparing the required files](/how-to?id=preparing-the-required-files)
+  * [Running the app](/how-to?id=running-the-app)
+  * [Merge the created overlay onto recorded video](/how-to?id=merge-the-created-overlay-onto-recorded-video)
 * [Youtube examples](youtube-samples.md)
