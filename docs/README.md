@@ -15,4 +15,4 @@ See [Create your own video](how-to.md)
 
 ## Examples of what you can create with the script
 
-See [examples on Youtube page of these docs](youtube-samples.md) or [my youtube channel](https://www.youtube.com/@bartoszjakubowiak).
+See [examples on Youtube page of these docs](youtube-samples.md) or [my youtube channel](https://www.youtube.com/watch?v=kodRKkPA-LU&list=PLPvM6BKGmMHfiwW9m8vXPvLQUmuErDn2f).

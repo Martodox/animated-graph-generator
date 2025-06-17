@@ -59,4 +59,4 @@ The overlay video sections should be merged on top of the recorded video or clip
 
 ## Work In Progress
 
-- If you get a type error see [here](https://github.com/Martodox/animated-graph-generator/pull/6).
+

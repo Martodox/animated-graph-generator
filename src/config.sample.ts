@@ -60,6 +60,9 @@ const config: Config = {
     },
   ],
   // devMode (development mode) true can be helpful for debugging.
+  // Will also generate only 1 frame to get a general overview of the 
+  // graph per section. Saves rendering time and gives an instant feedback
+  // to check your settings in this file produce results as expected.
   devMode: false,
   // Height and width of the graph in pixels
   basedHeight: 1512,

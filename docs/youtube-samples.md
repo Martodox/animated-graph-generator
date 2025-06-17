@@ -5,4 +5,4 @@
 
 ## See also
 
-[There are many more such videos on my youtube channel.](https://www.youtube.com/@bartoszjakubowiak)
+[There are many more such videos on my youtube channel.](https://www.youtube.com/watch?v=kodRKkPA-LU&list=PLPvM6BKGmMHfiwW9m8vXPvLQUmuErDn2f)
