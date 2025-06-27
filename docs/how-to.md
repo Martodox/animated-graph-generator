@@ -57,6 +57,10 @@ You should see an animation in the terminal showing you progress.
 
 The overlay video sections should be merged on top of the recorded video or clips of the video. The overlay video should be positioned to start at the `startTime` time stamp you provided to the script in the config file.
 
+## Change watermark with link to creators Youtube channel to your own watermark
+
+You can replace the file src/helpers/watermark.png with your own png of the same dimensions and with an alpha channel and most of the image transparent.
+
 ## Work In Progress
 
 
