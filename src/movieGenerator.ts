@@ -26,18 +26,20 @@ const renderMovie = async (props: IProps) => {
     props.destinationDirectory,
     `${props.fileName}.mov`
   );
-  const overlay = path.join("./src/helpers", "readout-background-2k.png");
+  const overlayReadout = path.join("./src/helpers", "readout-background-2k.png");
+  const overlayWatermark = path.join("./src/helpers", "watermark.png");
   return new Promise<void>((resolve, reject) => {
     ffmpeg()
-      .input(overlay)
-      .input(inputPattern)
+      .input(overlayReadout)      // [0:v] background
+      .input(overlayWatermark)    // [1:v] watermark
+      .input(inputPattern)        // [2:v] graph animation frames
       .inputFPS(config.stepResolution)
       .input(audio)
       .inputOption("-hwaccel", "videotoolbox")
-      .complexFilter(["[0:v][1:v] overlay=0:0 [v]"])
+      .complexFilter(["[0:v][2:v] overlay=0:0 [tmp1];[tmp1][1:v] overlay=0:0 [v]"])  
       .outputOptions([
         "-map [v]",
-        "-map 2:a:0", // Map the audio track from the audio file
+        "-map 3:a:0", // Map the audio track from the audio file
         `-r ${config.stepResolution}`,
         "-pix_fmt yuva444p10le",
         "-profile:v 4444",
