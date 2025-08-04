@@ -22,14 +22,6 @@ export interface GraphOptions extends Params {
 }
 
 
-export interface ChartParams extends Params {
-    label: number[],
-    data: { [k in DataSource]?: DataSourceData },
-    width: number,
-    height: number,
-    timerStartSecond: number,
-    timerStoptSecond: number
-}
 
 export interface RenderCallback {
     currentFrame: number;
