@@ -1,0 +1,219 @@
+# Cursor Rules for Animated Graph Generator
+
+## Project Overview
+
+This is a Node.js TypeScript application that processes fitness device data (Polar, Garmin, OxiWear) and generates animated video visualizations. The project uses Chart.js for visualization, FFmpeg for video processing, and implements a multi-threaded architecture with primary/worker patterns.
+
+## Code Style & Conventions
+
+### TypeScript Configuration
+
+- Use strict TypeScript with `strict: true` and `noImplicitAny: true`
+- Target ES6 with Node16 module resolution
+- Use ES modules with `.js` extensions in imports (even for TypeScript files)
+- Enable source maps for debugging
+- Use `allowSyntheticDefaultImports` and `esModuleInterop`
+
+### Import/Export Patterns
+
+```typescript
+// Always use .js extensions in imports, even for TypeScript files
+import config from "../config.js";
+import { getSecondsFromHourString } from "./time.js";
+import { DataSource, NormalisedDataSection } from "../types/config.js";
+
+// Use named exports for utilities and functions
+export const prepareDataset = async (normalisedDataSets: {
+  [k in DataSource]?: KeyedDataset;
+}): Promise<NormalisedDataSection[]> => {
+  // implementation
+};
+
+// Use default exports for main modules
+export default config;
+```
+
+### Naming Conventions
+
+- **Files**: Use camelCase for file names (e.g., `dataset.ts`, `movieGenerator.ts`)
+- **Functions**: Use camelCase with descriptive names (e.g., `getSecondsFromHourString`, `prepareDataset`)
+- **Types**: Use PascalCase for interfaces and types (e.g., `DataSource`, `NormalisedDataSection`)
+- **Constants**: Use camelCase (e.g., `colorO2`, `colorGarmin`)
+- **Variables**: Use camelCase with descriptive names
+
+### Type Definitions
+
+- Define comprehensive interfaces for all data structures
+- Use union types for data sources: `"polarCsv" | "garminFit" | "oxiwearCsv" | "oxiwearHRCsv"`
+- Use generic types for reusable components
+- Define strict types for configuration objects
+
+```typescript
+export interface Config {
+  destinationDirectory: string;
+  sources: Sources;
+  secondsAligment: number;
+  stepResolution: number;
+  audioOnly: boolean;
+  sections: DataSection[];
+  devMode: boolean;
+  basedHeight: number;
+  baseWidth: number;
+  sizeMultiplier: number;
+}
+```
+
+### Function Patterns
+
+- Use async/await for asynchronous operations
+- Implement proper error handling with try/catch
+- Use functional programming patterns where appropriate
+- Keep functions focused and single-purpose
+
+```typescript
+export const polarCsv = (config: SourcesConfig): KeyedDataset => {
+  const input = fs.readFileSync(config.src);
+  const individualLines = input.toString().split("\n");
+  // ... processing logic
+  return fillZeroWithPrevNonNull(session);
+};
+```
+
+### Data Processing Patterns
+
+- Use `reduce` for data transformation
+- Implement data validation and error checking
+- Use time-based indexing for fitness data
+- Handle missing or invalid data gracefully
+
+```typescript
+let session: KeyedDataset = parse(individualLines.join("\n"), {
+  columns: true,
+  skip_empty_lines: true,
+})
+  .map((val: any) => +val["HR (bpm)"])
+  .reduce((acc: any, val: any, index: number) => {
+    acc[startSecond + index] = val;
+    return acc;
+  }, {});
+```
+
+## Architecture Patterns
+
+### Module Organization
+
+- **`src/`**: Main application logic
+- **`src/helpers/`**: Utility functions and data parsers
+- **`src/helpers/dataParsers/`**: Device-specific data parsing logic
+- **`src/types/`**: Type definitions and interfaces
+- **`src/treads/`**: Multi-threading implementation (note: intentional typo in existing code)
+
+### Data Flow
+
+1. **Data Input**: Parse fitness device data (CSV, FIT files)
+2. **Data Processing**: Normalize and align time-based data
+3. **Visualization**: Generate Chart.js visualizations
+4. **Video Processing**: Create frame sequences and encode video
+5. **Output**: Generate video files with audio synchronization
+
+### Multi-threading Architecture
+
+- Use Node.js cluster with primary/worker pattern
+- Primary thread handles coordination and file I/O
+- Worker threads handle data processing and chart generation
+- Implement proper IPC communication between processes
+
+## Dependencies & Libraries
+
+### Core Dependencies
+
+- **Chart.js**: Data visualization and chart generation
+- **fluent-ffmpeg**: Video processing and encoding
+- **fit-file-parser**: Garmin FIT file parsing
+- **csv-parse**: CSV file parsing
+- **cli-progress**: Progress indication
+
+### Development Dependencies
+
+- **TypeScript**: Type safety and modern JavaScript features
+- **@types/node**: Node.js type definitions
+- **nodemon**: Development hot reloading
+
+## Error Handling
+
+- Use descriptive error messages with context
+- Implement graceful degradation for missing data
+- Validate input data before processing
+- Handle file system errors appropriately
+
+```typescript
+if (!normalisedDataSets[k as DataSource]) {
+  throw Error(`${k} is not defined in sources`);
+}
+```
+
+## Performance Considerations
+
+- Use streaming for large file processing
+- Implement efficient data structures for time-series data
+- Optimize Chart.js rendering for video generation
+- Use worker threads for CPU-intensive tasks
+- Implement progress tracking for long operations
+
+## Testing Guidelines
+
+- Write unit tests for data parsing functions
+- Test time synchronization logic thoroughly
+- Validate chart generation with sample data
+- Test error handling scenarios
+- Use Jest as the testing framework
+
+## File Structure
+
+```
+src/
+├── index.ts                 # Main entry point
+├── config.ts               # Configuration management
+├── graph.ts                # Chart.js visualization logic
+├── movieGenerator.ts       # Video generation
+├── audioBackground.ts      # Audio processing
+├── barProgress.ts          # Progress indication
+├── srt.ts                  # Subtitle generation
+├── helpers/
+│   ├── dataset.ts          # Data processing utilities
+│   ├── time.ts             # Time manipulation functions
+│   └── dataParsers/        # Device-specific parsers
+│       ├── polar.ts
+│       ├── garminFit.ts
+│       ├── oxiwear.ts
+│       └── utils.ts
+├── types/                  # Type definitions
+│   ├── config.ts
+│   ├── dataparsers.ts
+│   └── graph.ts
+└── treads/                 # Multi-threading
+    ├── primary.ts
+    └── wokrerThread.ts
+```
+
+## Best Practices
+
+- Always validate input data before processing
+- Use TypeScript strict mode for type safety
+- Implement proper error handling and logging
+- Keep functions small and focused
+- Use descriptive variable and function names
+- Document complex algorithms and data transformations
+- Follow the existing code patterns and conventions
+- Use the established multi-threading architecture
+- Maintain compatibility with existing data formats
+
+## Common Patterns to Follow
+
+- Time string manipulation using helper functions
+- Data source abstraction with union types
+- Configuration-driven processing
+- Progress tracking for long operations
+- File system operations with proper error handling
+- Chart.js configuration with device-specific styling
+- FFmpeg integration for video processing
